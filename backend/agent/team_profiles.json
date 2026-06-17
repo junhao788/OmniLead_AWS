@@ -1,0 +1,94 @@
+{
+  "team": [
+    {
+      "name": "Werd How",
+      "username": "howwerd0898",
+      "aliases": ["JunHaoGitHub"],
+      "role": "Owner / Tech Lead",
+      "skills": ["Management", "Architecture", "Review"],
+      "experience_level": "Lead",
+      "current_open_issues": 0,
+      "availability": "Low",
+      "timezone": "UTC+8",
+      "assignable": false
+    },
+    {
+      "name": "Jun Hao INTI",
+      "username": "JunnnHaoooo",
+      "role": "Developer",
+      "skills": [
+        "React",
+        "TailwindCSS",
+        "Javascript"
+      ],
+      "experience_level": "Senior",
+      "current_open_issues": 0,
+      "availability": "Medium",
+      "timezone": "UTC+8"
+    },
+    {
+      "name": "Crystal",
+      "username": "crystalchong000813",
+      "role": "Backend Developer",
+      "skills": [
+        "Python",
+        "Docker",
+        "API"
+      ],
+      "experience_level": "Senior",
+      "current_open_issues": 0,
+      "availability": "Medium",
+      "timezone": "UTC+8"
+    },
+    {
+      "name": "Alpha AI",
+      "username": "alpha_ai_dev",
+      "role": "Frontend Specialist",
+      "skills": ["React", "Vue", "CSS", "UI/UX"],
+      "experience_level": "Mid",
+      "current_open_issues": 0,
+      "availability": "High",
+      "timezone": "UTC+8"
+    },
+    {
+      "name": "Nexus AI",
+      "username": "nexus_ai_core",
+      "role": "Fullstack Developer",
+      "skills": ["Node.js", "Typescript", "Next.js", "MongoDB"],
+      "experience_level": "Senior",
+      "current_open_issues": 0,
+      "availability": "High",
+      "timezone": "UTC+8"
+    },
+    {
+      "name": "Omni AI",
+      "username": "omni_ai_ops",
+      "role": "DevOps Engineer",
+      "skills": ["Docker", "Kubernetes", "CI/CD", "AWS", "Deploy", "Render", "Vercel"],
+      "experience_level": "Senior",
+      "current_open_issues": 0,
+      "availability": "High",
+      "timezone": "UTC+8"
+    },
+    {
+      "name": "Beta AI",
+      "username": "beta_ai_frontend",
+      "role": "Frontend Developer",
+      "skills": ["React", "HTML/CSS", "Javascript"],
+      "experience_level": "Junior",
+      "current_open_issues": 0,
+      "availability": "High",
+      "timezone": "UTC+8"
+    },
+    {
+      "name": "Delta AI",
+      "username": "delta_ai_backend",
+      "role": "Backend Developer",
+      "skills": ["Python", "FastAPI", "SQLite", "API"],
+      "experience_level": "Junior",
+      "current_open_issues": 0,
+      "availability": "High",
+      "timezone": "UTC+8"
+    }
+  ]
+}

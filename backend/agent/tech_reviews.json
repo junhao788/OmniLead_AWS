@@ -1,0 +1,153 @@
+{
+  "82764343": [
+    {
+      "mr_iid": 3,
+      "mr_title": "Done User Profile #6",
+      "created_at": 1780407960.8687367,
+      "review": {
+        "status": "NEEDS_WORK",
+        "summary": "The User Profile component and its styling are well-implemented and directly address Issue #6. However, there are minor quality issues that need attention: debug `console.log` statements are commented out but still present, and a newline character is missing at the end of `App.tsx`.",
+        "feedback": [
+          {
+            "file": "frontend/src/pages/UserProfile.tsx",
+            "comment": "Remove commented-out `console.log` statements. Debug code, even commented out, should not be committed to maintain a clean codebase."
+          },
+          {
+            "file": "frontend/src/App.tsx",
+            "comment": "Add a newline character at the end of the file for consistency and to adhere to common file formatting standards."
+          }
+        ],
+        "fixes": [
+          {
+            "file_path": "frontend/src/pages/UserProfile.tsx",
+            "action": "update",
+            "content": "import { useEffect } from 'react';\nimport './UserProfile.css';\n\nconst UserProfile = () => {\n  useEffect(() => {\n    \n    return () => {\n      \n    };\n  }, []);\n\n  const handleTabClick = (tabName: string) => {\n    \n  };\n\n  return (\n    <div className=\"profile-page\">\n      <div className=\"profile-header-card\">\n        <div className=\"profile-cover\">\n          <div className=\"cover-gradient\"></div>\n        </div>\n        <div className=\"profile-info-section\">\n          <div className=\"profile-avatar-wrapper\">\n            <img \n              src=\"https://api.dicebear.com/7.x/avataaars/svg?seed=Felix\" \n              alt=\"User Avatar\" \n              className=\"profile-avatar-large\"\n            />\n            <div className=\"status-indicator online\"></div>\n          </div>\n          \n          <div className=\"profile-details\">\n            <div className=\"profile-title\">\n              <h2>Felix Nova</h2>\n              <span className=\"badge\">Pro Member</span>\n            </div>\n            <p className=\"profile-role\">Senior Product Designer at NovaDash</p>\n            <div className=\"profile-meta\">\n              <span>📍 San Francisco, CA</span>\n              <span>✉️ felix@novadash.com</span>\n              <span>🔗 novadash.com/felix</span>\n            </div>\n          </div>\n\n          <div className=\"profile-actions\">\n            <button className=\"btn-secondary\" onClick={() => { /* Edit Profile Clicked */ }}>\n              Edit Profile\n            </button>\n            <button className=\"btn-primary\" onClick={() => { /* Share Profile Clicked */ }}>\n              Share\n            </button>\n          </div>\n        </div>\n      </div>\n\n      <div className=\"profile-content\">\n        <div className=\"profile-sidebar\">\n          <div className=\"stats-card\">\n            <h3>Overview</h3>\n            <div className=\"stats-grid\">\n              <div className=\"stat-box\">\n                <span className=\"stat-value\">24</span>\n                <span className=\"stat-label\">Projects</span>\n              </div>\n              <div className=\"stat-box\">\n                <span className=\"stat-value\">142</span>\n                <span className=\"stat-label\">Tasks Done</span>\n              </div>\n              <div className=\"stat-box\">\n                <span className=\"stat-value\">89</span>\n                <span className=\"stat-label\">Connections</span>\n              </div>\n            </div>\n          </div>\n\n          <div className=\"skills-card\">\n            <h3>Top Skills</h3>\n            <div className=\"skills-tags\">\n              <span className=\"tag\">UI/UX Design</span>\n              <span className=\"tag\">React</span>\n              <span className=\"tag\">Figma</span>\n              <span className=\"tag\">Product Strategy</span>\n            </div>\n          </div>\n        </div>\n\n        <div className=\"profile-main\">\n          <div className=\"tabs-nav\">\n            <button className=\"tab active\" onClick={() => handleTabClick('Activity')}>Recent Activity</button>\n            <button className=\"tab\" onClick={() => handleTabClick('Projects')}>Projects</button>\n            <button className=\"tab\" onClick={() => handleTabClick('Settings')}>Settings</button>\n          </div>\n          \n          <div className=\"tab-content\">\n            <div className=\"activity-feed\">\n              <div className=\"activity-item\">\n                <div className=\"activity-icon design\">🎨</div>\n                <div className=\"activity-details\">\n                  <p><strong>Felix</strong> updated the design system for <span>Project Alpha</span></p>\n                  <span className=\"activity-time\">2 hours ago</span>\n                </div>\n              </div>\n              \n              <div className=\"activity-item\">\n                <div className=\"activity-icon task\">✅</div>\n                <div className=\"activity-details\">\n                  <p><strong>Felix</strong> completed task <span>Implement Header Component</span></p>\n                  <span className=\"activity-time\">5 hours ago</span>\n                </div>\n              </div>\n\n              <div className=\"activity-item\">\n                <div className=\"activity-icon comment\">💬</div>\n                <div className=\"activity-details\">\n                  <p><strong>Felix</strong> commented on <span>Dashboard Analytics API</span></p>\n                  <span className=\"activity-time\">Yesterday at 4:30 PM</span>\n                </div>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n  );\n};\n\nexport default UserProfile;\n"
+          },
+          {
+            "file_path": "frontend/src/App.tsx",
+            "action": "update",
+            "content": "import { useState } from 'react'\nimport reactLogo from './assets/react.svg'\nimport viteLogo from './assets/vite.svg'\nimport heroImg from './assets/hero.png'\nimport Header from './components/Header'\nimport UserProfile from './pages/UserProfile'\nimport './App.css'\n\nfunction App() {\n  const [count, setCount] = useState(0)\n\n  return (\n    <>\n      <Header />\n      <UserProfile />\n      <section id=\"center\">\n        <div className=\"hero\">\n          <img src={heroImg} className=\"base\" width=\"170\" height=\"179\" alt=\"\" />\n          <div className=\"text\">\n            <h2>Welcome to Project Horizon</h2>\n            <p>\n              Your journey to seamless project management and collaboration starts here.\n              Organize tasks, track progress, and foster teamwork effortlessly.\n            </p>\n            <button onClick={() => alert('Lets Get Started!')}>Get Started</button>\n          </div>\n        </div>\n        <div className=\"card\">\n          <button onClick={() => setCount((count) => count + 1)}>\n            count is {count}\n          </button>\n          <p>\n            Edit <code>src/App.tsx</code> and save to test HMR\n          </p>\n        </div>\n        <p className=\"read-the-docs\">\n          Click on the Vite and React logos to learn more\n        </p>\n      </section>\n    </>\n  )\n}\n\nexport default App\n"
+          }
+        ],
+        "auto_fixed": true,
+        "fix_commit": "8490393d"
+      }
+    },
+    {
+      "mr_iid": 3,
+      "mr_title": "Done User Profile #6",
+      "created_at": 1780407880.9036446,
+      "review": {
+        "status": "NEEDS_WORK",
+        "summary": "The User Profile feature is well-structured and styled correctly. However, the `UserProfile.tsx` component contains several `console.log` statements which should be removed before merging to production. These are considered debug code.",
+        "feedback": [
+          {
+            "file": "frontend/src/pages/UserProfile.tsx",
+            "comment": "Remove all `console.log` statements from this file. These are debug code and should not be present in production. For interactive elements, consider adding actual functionality or placeholder comments."
+          }
+        ],
+        "fixes": [
+          {
+            "file_path": "frontend/src/pages/UserProfile.tsx",
+            "action": "update",
+            "content": "import { useEffect } from 'react';\nimport './UserProfile.css';\n\nconst UserProfile = () => {\n  useEffect(() => {\n    // console.log(\"UserProfile Component Mounted\"); // Removed for production\n    \n    return () => {\n      // console.log(\"UserProfile Component Unmounted\"); // Removed for production\n    };\n  }, []);\n\n  const handleTabClick = (tabName: string) => {\n    // console.log(`Tab clicked: ${tabName}`); // Removed for production\n  };\n\n  return (\n    <div className=\"profile-page\">\n      <div className=\"profile-header-card\">\n        <div className=\"profile-cover\">\n          <div className=\"cover-gradient\"></div>\n        </div>\n        <div className=\"profile-info-section\">\n          <div className=\"profile-avatar-wrapper\">\n            <img \n              src=\"https://api.dicebear.com/7.x/avataaars/svg?seed=Felix\" \n              alt=\"User Avatar\" \n              className=\"profile-avatar-large\"\n            />\n            <div className=\"status-indicator online\"></div>\n          </div>\n          \n          <div className=\"profile-details\">\n            <div className=\"profile-title\">\n              <h2>Felix Nova</h2>\n              <span className=\"badge\">Pro Member</span>\n            </div>\n            <p className=\"profile-role\">Senior Product Designer at NovaDash</p>\n            <div className=\"profile-meta\">\n              <span>📍 San Francisco, CA</span>\n              <span>✉️ felix@novadash.com</span>\n              <span>🔗 novadash.com/felix</span>\n            </div>\n          </div>\n\n          <div className=\"profile-actions\">\n            <button className=\"btn-secondary\" onClick={() => { /* Edit Profile Clicked */ }}>\n              Edit Profile\n            </button>\n            <button className=\"btn-primary\" onClick={() => { /* Share Profile Clicked */ }}>\n              Share\n            </button>\n          </div>\n        </div>\n      </div>\n\n      <div className=\"profile-content\">\n        <div className=\"profile-sidebar\">\n          <div className=\"stats-card\">\n            <h3>Overview</h3>\n            <div className=\"stats-grid\">\n              <div className=\"stat-box\">\n                <span className=\"stat-value\">24</span>\n                <span className=\"stat-label\">Projects</span>\n              </div>\n              <div className=\"stat-box\">\n                <span className=\"stat-value\">142</span>\n                <span className=\"stat-label\">Tasks Done</span>\n              </div>\n              <div className=\"stat-box\">\n                <span className=\"stat-value\">89</span>\n                <span className=\"stat-label\">Connections</span>\n              </div>\n            </div>\n          </div>\n\n          <div className=\"skills-card\">\n            <h3>Top Skills</h3>\n            <div className=\"skills-tags\">\n              <span className=\"tag\">UI/UX Design</span>\n              <span className=\"tag\">React</span>\n              <span className=\"tag\">Figma</span>\n              <span className=\"tag\">Product Strategy</span>\n            </div>\n          </div>\n        </div>\n\n        <div className=\"profile-main\">\n          <div className=\"tabs-nav\">\n            <button className=\"tab active\" onClick={() => handleTabClick('Activity')}>Recent Activity</button>\n            <button className=\"tab\" onClick={() => handleTabClick('Projects')}>Projects</button>\n            <button className=\"tab\" onClick={() => handleTabClick('Settings')}>Settings</button>\n          </div>\n          \n          <div className=\"tab-content\">\n            <div className=\"activity-feed\">\n              <div className=\"activity-item\">\n                <div className=\"activity-icon design\">🎨</div>\n                <div className=\"activity-details\">\n                  <p><strong>Felix</strong> updated the design system for <span>Project Alpha</span></p>\n                  <span className=\"activity-time\">2 hours ago</span>\n                </div>\n              </div>\n              \n              <div className=\"activity-item\">\n                <div className=\"activity-icon task\">✅</div>\n                <div className=\"activity-details\">\n                  <p><strong>Felix</strong> completed task <span>Implement Header Component</span></p>\n                  <span className=\"activity-time\">5 hours ago</span>\n                </div>\n              </div>\n\n              <div className=\"activity-item\">\n                <div className=\"activity-icon comment\">💬</div>\n                <div className=\"activity-details\">\n                  <p><strong>Felix</strong> commented on <span>Dashboard Analytics API</span></p>\n                  <span className=\"activity-time\">Yesterday at 4:30 PM</span>\n                </div>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n  );\n};\n\nexport default UserProfile;\n"
+          }
+        ],
+        "auto_fixed": true,
+        "fix_commit": "65faa264"
+      }
+    },
+    {
+      "mr_iid": 2,
+      "mr_title": "#7 navbar",
+      "created_at": 1780345823.1335108,
+      "review": {
+        "status": "APPROVED",
+        "summary": "The merge request introduces a well-designed and functional `Header` component with comprehensive styling. The CSS is modern, responsive, and includes dark mode support. The React component structure is clean and integrates correctly into `App.tsx`. This implementation significantly enhances the application's UI.",
+        "feedback": [
+          {
+            "file": "frontend/src/components/Header.tsx",
+            "comment": "The navigation links currently use `href=\"#\"`. For a production application, these should be replaced with actual routes (e.g., using React Router) to ensure proper navigation and avoid default browser behavior for anchor links. The avatar image is a placeholder from dicebear.com; ensure this is replaced with dynamic user data in a live environment."
+          },
+          {
+            "file": "frontend/src/components/Header.css",
+            "comment": "Excellent use of CSS variables, `backdrop-filter`, and media queries for responsive design and dark mode. The transitions and hover effects are well-implemented, contributing to a polished user experience."
+          }
+        ]
+      }
+    },
+    {
+      "mr_iid": 1,
+      "mr_title": "test AI review ABBCD",
+      "created_at": 1780344708.1591713,
+      "review": {
+        "status": "APPROVED",
+        "summary": "The Merge Request introduces a well-structured and styled Header component, integrating smoothly into the application. The use of `lucide-react` for icons is a good choice, and the CSS provides appropriate styling and responsiveness.",
+        "feedback": [
+          {
+            "file": "frontend/src/components/Header.css",
+            "comment": "The CSS is well-organized and includes good responsive breakpoints for various screen sizes. Using CSS variables is a good practice for maintainability."
+          },
+          {
+            "file": "frontend/src/components/Header.tsx",
+            "comment": "The component structure is clear and follows React best practices. Proper use of semantic HTML elements and ARIA attributes (aria-label) for interactive elements is appreciated."
+          },
+          {
+            "file": "frontend/src/App.tsx",
+            "comment": "The Header component is correctly imported and rendered at the top level of the application."
+          },
+          {
+            "file": "frontend/package.json",
+            "comment": "`lucide-react` dependency correctly added."
+          }
+        ]
+      }
+    },
+    {
+      "mr_iid": 1,
+      "mr_title": "test AI review ABBC",
+      "created_at": 1780344550.5511231,
+      "review": {
+        "status": "APPROVED",
+        "summary": "The Merge Request successfully introduces a well-designed and functional header component with comprehensive styling and responsive considerations. The integration into the main application is correct, and necessary dependencies have been added.",
+        "feedback": [
+          {
+            "file": "frontend/src/components/Header.css",
+            "comment": "Excellent use of CSS variables for theming and maintainability. The inclusion of `backdrop-filter` provides a modern aesthetic, and media queries ensure good responsiveness across devices. The styling is thorough and well-organized."
+          },
+          {
+            "file": "frontend/src/components/Header.tsx",
+            "comment": "The React component is cleanly structured and effectively utilizes `lucide-react` for icons. Semantic elements are used appropriately. The use of `aria-label` for interactive elements is a good practice for accessibility."
+          },
+          {
+            "file": "frontend/src/App.tsx",
+            "comment": "The Header component is correctly imported and rendered, ensuring its proper placement within the application's layout."
+          },
+          {
+            "file": "frontend/package.json",
+            "comment": "The addition of `lucide-react` as a dependency is correct and essential for the functionality of the new Header component."
+          }
+        ]
+      }
+    },
+    {
+      "mr_iid": 1,
+      "mr_title": "test AI review ABB",
+      "created_at": 1780344404.5400407,
+      "review": {
+        "status": "APPROVED",
+        "summary": "The Merge Request successfully introduces a well-structured and styled Header component, utilizing modern CSS practices (variables, dark mode, responsiveness) and integrating `lucide-react` for icons. The component is correctly integrated into `App.tsx`. The code is of good quality, correct, and complete for its stated purpose.",
+        "feedback": [
+          {
+            "file": "frontend/src/components/Header.tsx",
+            "comment": "The use of `href='#'` for navigation links is acceptable for a static UI component, but for a live application, these would typically be replaced with actual router links (e.g., `<Link to='/dashboard'>`). This is a minor point and does not block approval."
+          },
+          {
+            "file": "frontend/src/components/Header.css",
+            "comment": "Excellent use of CSS variables, `backdrop-filter`, and media queries for responsive design and dark mode. The styling is comprehensive and follows modern web design principles."
+          }
+        ]
+      }
+    }
+  ]
+}
