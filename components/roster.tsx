@@ -92,6 +92,9 @@ function AddMemberDialog({
   onClose,
   onAdd,
 }: {
+  onClose: () => void
+  onAdd: (dev: Developer) => void
+}) {
   const [gitlabUsername, setGitlabUsername] = useState("")
   const [fullname, setFullname] = useState("")
   const [email, setEmail] = useState("")
