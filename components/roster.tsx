@@ -85,32 +85,26 @@ function AddMemberDialog({
   onClose,
   onAdd,
 }: {
-  onClose: () => void
-  onAdd: (dev: Developer) => void
-}) {
-  const [username, setUsername] = useState("")
-  const [name, setName] = useState("")
+  const [gitlabUsername, setGitlabUsername] = useState("")
+  const [fullname, setFullname] = useState("")
+  const [email, setEmail] = useState("")
   const [role, setRole] = useState("")
   const [skills, setSkills] = useState("")
-  const [experienceLevel, setExperienceLevel] = useState("Mid")
-  const [availability, setAvailability] = useState<Availability>("available")
-  const [openIssues, setOpenIssues] = useState("0")
+  const [experience, setExperience] = useState("Mid")
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim() || !role.trim() || !username.trim()) return
-    const open = Math.max(0, Number(openIssues) || 0)
+    if (!fullname.trim() || !role.trim() || !gitlabUsername.trim()) return
     
     const newDev = {
-      name: name.trim(),
-      username: username.trim(),
-      github_username: "",
+      gitlabUsername: gitlabUsername.trim(),
+      fullname: fullname.trim(),
+      email: email.trim(),
       role: role.trim(),
+      experience: experience,
       skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
-      experience_level: experienceLevel,
-      availability,
-      timezone: "UTC+8",
-      current_open_issues: open
+      availability: "available",
+      opentask: 0
     }
 
     try {
@@ -119,13 +113,13 @@ function AddMemberDialog({
         body: JSON.stringify(newDev)
       })
       onAdd({
-        id: newDev.username,
-        name: newDev.name,
-        initials: initialsFromName(newDev.name),
+        id: newDev.gitlabUsername,
+        name: newDev.fullname,
+        initials: initialsFromName(newDev.fullname),
         role: newDev.role,
         skills: newDev.skills,
         availability: newDev.availability as Availability,
-        openIssues: open,
+        openIssues: newDev.opentask,
         capacity: 8,
       })
       onClose()
@@ -162,13 +156,13 @@ function AddMemberDialog({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="m-username" className="text-xs font-medium text-card-foreground">
-                Username
+              <label htmlFor="m-gitlab" className="text-xs font-medium text-card-foreground">
+                GitLab Username
               </label>
               <input
-                id="m-username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="m-gitlab"
+                value={gitlabUsername}
+                onChange={(e) => setGitlabUsername(e.target.value)}
                 placeholder="jane_doe"
                 className={inputClass}
                 autoFocus
@@ -180,88 +174,70 @@ function AddMemberDialog({
               </label>
               <input
                 id="m-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={fullname}
+                onChange={(e) => setFullname(e.target.value)}
                 placeholder="Jane Doe"
                 className={inputClass}
               />
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="m-role" className="text-xs font-medium text-card-foreground">
-              Role
-            </label>
-            <input
-              id="m-role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              placeholder="Senior Backend Engineer"
-              className={inputClass}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="m-skills" className="text-xs font-medium text-card-foreground">
-              Skills <span className="text-muted-foreground">(comma separated)</span>
-            </label>
-            <input
-              id="m-skills"
-              value={skills}
-              onChange={(e) => setSkills(e.target.value)}
-              placeholder="React, TypeScript, Node.js"
-              className={inputClass}
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="m-email" className="text-xs font-medium text-card-foreground">
+                Email
+              </label>
+              <input
+                id="m-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="jane@example.com"
+                className={inputClass}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="m-role" className="text-xs font-medium text-card-foreground">
+                Role
+              </label>
+              <input
+                id="m-role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                placeholder="Senior Backend Engineer"
+                className={inputClass}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="m-avail" className="text-xs font-medium text-card-foreground">
-                Availability
+              <label htmlFor="m-skills" className="text-xs font-medium text-card-foreground">
+                Skills <span className="text-muted-foreground">(comma separated)</span>
+              </label>
+              <input
+                id="m-skills"
+                value={skills}
+                onChange={(e) => setSkills(e.target.value)}
+                placeholder="React, TypeScript, Node.js"
+                className={inputClass}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="m-exp" className="text-xs font-medium text-card-foreground">
+                Experience
               </label>
               <select
-                id="m-avail"
-                value={availability}
-                onChange={(e) => setAvailability(e.target.value as Availability)}
+                id="m-exp"
+                value={experience}
+                onChange={(e) => setExperience(e.target.value)}
                 className={inputClass}
               >
-                {availabilityOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
+                <option value="Junior">Junior</option>
+                <option value="Mid">Mid</option>
+                <option value="Senior">Senior</option>
+                <option value="Lead">Lead</option>
               </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="m-open" className="text-xs font-medium text-card-foreground">
-                  Open
-                </label>
-                <input
-                  id="m-open"
-                  type="number"
-                  min={0}
-                  value={openIssues}
-                  onChange={(e) => setOpenIssues(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="m-exp" className="text-xs font-medium text-card-foreground">
-                  Experience
-                </label>
-                <select
-                  id="m-exp"
-                  value={experienceLevel}
-                  onChange={(e) => setExperienceLevel(e.target.value)}
-                  className={inputClass}
-                >
-                  <option value="Junior">Junior</option>
-                  <option value="Mid">Mid</option>
-                  <option value="Senior">Senior</option>
-                  <option value="Lead">Lead</option>
-                </select>
-              </div>
             </div>
           </div>
 
