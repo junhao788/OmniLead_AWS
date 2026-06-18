@@ -107,41 +107,10 @@ export function Sidebar({
           })}
         </nav>
 
-        <div className="relative border-t border-border p-3 hidden lg:block" ref={dropdownRef}>
-          <button
-            onClick={() => setIsOpen((prev) => !prev)}
-            className={cn(
-              "flex w-full items-center gap-2.5 border p-2 text-left transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 z-50 relative",
-              isOpen
-                ? "bg-popover border-border border-t-0 rounded-t-none rounded-b-lg shadow-xl"
-                : "bg-sidebar-accent/35 border-border rounded-lg hover:bg-sidebar-accent/80 hover:border-primary/40"
-            )}
-            aria-haspopup="listbox"
-            aria-expanded={isOpen}
-          >
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary relative">
-              <FolderGit2 className="size-4.5" />
-              <span className="absolute -top-0.5 -right-0.5 size-1.5 rounded-full bg-primary shadow-[0_0_6px] shadow-primary animate-pulse" />
-            </div>
-            <div className="min-w-0 flex-1 leading-tight">
-              <span className="block truncate text-xs font-semibold text-foreground">
-                {loadingProjects ? (
-                  <span className="opacity-50">Loading projects...</span>
-                ) : activeProject ? (
-                  activeProject.name
-                ) : (
-                  "Select Project"
-                )}
-              </span>
-              <span className="block truncate text-[10px] text-muted-foreground mt-0.5">
-                {activeProject ? `${activeProject.type} Repo` : "OmniLead Workspace"}
-              </span>
-            </div>
-            <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground/80" />
-          </button>
-
+      <div className="border-t border-border p-3 hidden lg:block">
+        <div className="relative" ref={dropdownRef}>
           {isOpen && (
-            <div className="absolute bottom-full left-3 w-[360px] z-50 flex flex-col rounded-t-lg rounded-b-none border border-border border-b-0 bg-popover p-2 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-150">
+            <div className="absolute bottom-full left-0 w-[360px] z-50 mb-2 flex flex-col rounded-lg border border-border bg-popover p-2 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-150">
               <div className="relative mb-2 flex items-center">
                 <Search className="absolute left-2.5 size-3.5 text-muted-foreground/70" />
                 <input
@@ -192,8 +161,36 @@ export function Sidebar({
               </div>
             </div>
           )}
+
+          <button
+            onClick={() => setIsOpen((prev) => !prev)}
+            className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-sidebar-accent/35 p-2 text-left hover:bg-sidebar-accent/80 hover:border-primary/40 transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 z-50 relative"
+            aria-haspopup="listbox"
+            aria-expanded={isOpen}
+          >
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary relative">
+              <FolderGit2 className="size-4.5" />
+              <span className="absolute -top-0.5 -right-0.5 size-1.5 rounded-full bg-primary shadow-[0_0_6px] shadow-primary animate-pulse" />
+            </div>
+            <div className="min-w-0 flex-1 leading-tight">
+              <span className="block truncate text-xs font-semibold text-foreground">
+                {loadingProjects ? (
+                  <span className="opacity-50">Loading projects...</span>
+                ) : activeProject ? (
+                  activeProject.name
+                ) : (
+                  "Select Project"
+                )}
+              </span>
+              <span className="block truncate text-[10px] text-muted-foreground mt-0.5">
+                {activeProject ? `${activeProject.type} Repo` : "OmniLead Workspace"}
+              </span>
+            </div>
+            <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground/80" />
+          </button>
         </div>
-      </aside>
+      </div>
+    </aside>
     </>
   )
 }
