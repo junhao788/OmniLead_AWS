@@ -107,9 +107,9 @@ export function Sidebar({
       )}
 
       <div className="border-t border-border p-3 hidden lg:block relative z-50">
-        <div className="relative" ref={dropdownRef}>
+        <div className={cn("relative transition-all duration-200 ease-out", isOpen ? "w-[340px]" : "w-[232px]")} ref={dropdownRef}>
           {isOpen && (
-            <div className="absolute bottom-full left-0 w-[340px] z-50 flex flex-col rounded-t-lg border-x border-t border-border bg-popover p-2 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-150">
+            <div className="absolute bottom-full left-0 w-full z-50 flex flex-col rounded-t-lg border-x border-t border-border bg-popover p-2 shadow-2xl animate-in fade-in duration-150 origin-bottom">
               <div className="relative mb-2 flex items-center">
                 <Search className="absolute left-2.5 size-3.5 text-muted-foreground/70" />
                 <input
@@ -164,7 +164,7 @@ export function Sidebar({
           <button
             onClick={() => setIsOpen((prev) => !prev)}
             className={cn(
-              "flex w-full items-center gap-2.5 border border-border p-2 text-left hover:bg-sidebar-accent/80 hover:border-primary/40 transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 z-50 relative",
+              "flex w-full items-center gap-2.5 border border-border p-2 text-left hover:bg-sidebar-accent/80 hover:border-primary/40 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/30 z-50 relative",
               isOpen ? "bg-sidebar-accent/80 rounded-b-lg border-t-transparent" : "bg-sidebar-accent/35 rounded-lg"
             )}
             aria-haspopup="listbox"
@@ -174,7 +174,7 @@ export function Sidebar({
               <FolderGit2 className="size-4.5" />
               <span className="absolute -top-0.5 -right-0.5 size-1.5 rounded-full bg-primary shadow-[0_0_6px] shadow-primary animate-pulse" />
             </div>
-            <div className="min-w-0 flex-1 leading-tight">
+            <div className="min-w-0 flex-1 leading-tight overflow-hidden">
               <span className="block truncate text-xs font-semibold text-foreground">
                 {loadingProjects ? (
                   <span className="opacity-50">Loading projects...</span>
