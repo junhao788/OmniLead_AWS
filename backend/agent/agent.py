@@ -4,6 +4,10 @@ from dotenv import load_dotenv
 # Load environment variables FIRST
 load_dotenv()
 
+# Fallback for ADK which expects GEMINI_API_KEY
+if "GOOGLE_API_KEY" in os.environ and "GEMINI_API_KEY" not in os.environ:
+    os.environ["GEMINI_API_KEY"] = os.environ["GOOGLE_API_KEY"]
+
 from google.adk.agents import Agent
 from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
 from mcp.client.stdio import StdioServerParameters
