@@ -37,6 +37,19 @@ class ChatRequest(BaseModel):
     project_id: str = None
     stream_output: bool = False
 
+class ZeroToOneRequest(BaseModel):
+    prompt: str
+
+@app.post("/api/project/zero_to_one")
+async def zero_to_one_project(request: ZeroToOneRequest):
+    try:
+        import asyncio
+        base_dir, adk_exe, agent_dir, merged_env = _prepare_agent_env()
+        result = await asyncio.to_thread(_run_agent_sync, adk_exe, agent_dir, f"ZERO TO ONE: {request.prompt}", merged_env, base_dir)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/projects")
 async def get_projects():
     try:
