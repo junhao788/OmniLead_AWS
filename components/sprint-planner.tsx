@@ -94,12 +94,18 @@ function TicketRow({ ticket }: { ticket: Ticket }) {
   )
 }
 
-export function SprintPlanner() {
+export function SprintPlanner({ projectId }: { projectId?: string }) {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchAPI("/api/sprints/82559130")
+    if (!projectId) {
+      setTickets([])
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    fetchAPI(`/api/sprints/${projectId}`)
       .then((data) => {
         if (data.sprints && data.sprints.length > 0) {
           const activeSprint = data.sprints[0]
@@ -128,7 +134,7 @@ export function SprintPlanner() {
           })
           setTickets(newTickets.length > 0 ? newTickets : mockTickets)
         } else {
-          setTickets(mockTickets)
+          setTickets([])
         }
       })
       .catch((err) => {
@@ -136,7 +142,7 @@ export function SprintPlanner() {
         setTickets(mockTickets)
       })
       .finally(() => setLoading(false))
-  }, [])
+  }, [projectId])
 
   const ranked = [...tickets].sort((a, b) => a.aiRank - b.aiRank)
 
@@ -156,24 +162,40 @@ export function SprintPlanner() {
             OmniLead ranked {tickets.length} tickets by dependencies, risk, and impact. Drag-free — it re-sorts as work lands.
           </p>
         </div>
-        <span className="ml-auto hidden items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground sm:flex">
-          <ArrowUpDown className="size-3.5" />
-          Sorted by AI rank
-        </span>
+        {tickets.length > 0 && (
+          <span className="ml-auto hidden items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground sm:flex">
+            <ArrowUpDown className="size-3.5" />
+            Sorted by AI rank
+          </span>
+        )}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="hidden grid-cols-[2.5rem_1fr_auto_auto_auto] gap-3 border-b border-border px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground sm:grid">
-          <span>Rank</span>
-          <span>Ticket</span>
-          <span>Priority</span>
-          <span>Status</span>
-          <span className="text-right">Owner</span>
+      {tickets.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3.5 rounded-xl border border-dashed border-border bg-card/40 py-16 text-center animate-in fade-in duration-300">
+          <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Sparkles className="size-6 animate-pulse" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">No active sprint found</p>
+            <p className="max-w-md text-xs text-muted-foreground mt-1 px-4 leading-relaxed">
+              There are no tasks or tickets generated for this project yet. Go to the **Launchpad** tab to describe your product idea and let OmniLead build your sprint blueprint!
+            </p>
+          </div>
         </div>
-        {ranked.map((ticket) => (
-          <TicketRow key={ticket.id} ticket={ticket} />
-        ))}
-      </div>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <div className="hidden grid-cols-[2.5rem_1fr_auto_auto_auto] gap-3 border-b border-border px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground sm:grid">
+            <span>Rank</span>
+            <span>Ticket</span>
+            <span>Priority</span>
+            <span>Status</span>
+            <span className="text-right">Owner</span>
+          </div>
+          {ranked.map((ticket) => (
+            <TicketRow key={ticket.id} ticket={ticket} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

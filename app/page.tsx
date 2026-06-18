@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Search, Bell } from "lucide-react"
 import { Sidebar, type ViewKey } from "@/components/sidebar"
 import { Launchpad } from "@/components/launchpad"
 import { Roster } from "@/components/roster"
 import { SprintPlanner } from "@/components/sprint-planner"
 import { DailyStandup } from "@/components/daily-standup"
+import { fetchAPI } from "@/lib/api"
 
 const titles: Record<ViewKey, { title: string; subtitle: string }> = {
   launchpad: { title: "Launchpad", subtitle: "Turn a raw idea into a scaffolded project." },
@@ -17,11 +18,60 @@ const titles: Record<ViewKey, { title: string; subtitle: string }> = {
 
 export default function Page() {
   const [view, setView] = useState<ViewKey>("launchpad")
+  const [projectId, setProjectId] = useState<string>("")
+  const [projects, setProjects] = useState<any[]>([])
+  const [loadingProjects, setLoadingProjects] = useState(true)
   const meta = titles[view]
+
+  useEffect(() => {
+    setLoadingProjects(true)
+    fetchAPI("/api/projects")
+      .then((data) => {
+        if (data.projects) {
+          setProjects(data.projects)
+          const savedId = localStorage.getItem("omnilead_selected_project_id")
+          const isValid = data.projects.some((p: any) => p.id === savedId)
+          if (savedId && isValid) {
+            setProjectId(savedId)
+          } else if (data.projects.length > 0) {
+            setProjectId(data.projects[0].id)
+            localStorage.setItem("omnilead_selected_project_id", data.projects[0].id)
+          }
+        }
+      })
+      .catch((err) => console.error("Failed to load projects:", err))
+      .finally(() => setLoadingProjects(false))
+  }, [])
+
+  const handleSelectProject = (id: string) => {
+    setProjectId(id)
+    localStorage.setItem("omnilead_selected_project_id", id)
+  }
+
+  const handleProjectCreated = (newProject: { id: string; name: string }) => {
+    const formatted = {
+      id: newProject.id,
+      name: newProject.name,
+      name_with_namespace: newProject.name,
+      type: "Personal",
+      web_url: `https://gitlab.com/${newProject.name}`,
+    }
+    setProjects((prev) => [formatted, ...prev])
+    setProjectId(newProject.id)
+    localStorage.setItem("omnilead_selected_project_id", newProject.id)
+    setView("sprint")
+  }
 
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
-      <Sidebar active={view} onSelect={setView} />
+      <Sidebar
+        active={view}
+        onSelect={setView}
+        projects={projects}
+        selectedProjectId={projectId}
+        onSelectProject={handleSelectProject}
+        loadingProjects={loadingProjects}
+      />
 
       <main className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center gap-4 border-b border-border bg-background/80 px-5 py-4 backdrop-blur lg:px-8">
@@ -47,12 +97,13 @@ export default function Page() {
         </header>
 
         <div className="flex-1 overflow-y-auto p-5 lg:p-8">
-          {view === "launchpad" && <Launchpad />}
+          {view === "launchpad" && <Launchpad onProjectCreated={handleProjectCreated} />}
           {view === "roster" && <Roster />}
-          {view === "sprint" && <SprintPlanner />}
-          {view === "standup" && <DailyStandup />}
+          {view === "sprint" && <SprintPlanner projectId={projectId} />}
+          {view === "standup" && <DailyStandup projectId={projectId} />}
         </div>
       </main>
     </div>
   )
 }
+

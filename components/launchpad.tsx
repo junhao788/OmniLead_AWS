@@ -24,7 +24,11 @@ const steps = [
   { icon: FileText, label: "Writing & prioritizing tickets" },
 ]
 
-export function Launchpad() {
+export function Launchpad({
+  onProjectCreated,
+}: {
+  onProjectCreated?: (project: { id: string; name: string }) => void
+}) {
   const [idea, setIdea] = useState("")
   const [phase, setPhase] = useState<Phase>("idle")
   const [step, setStep] = useState(0)
@@ -85,9 +89,29 @@ export function Launchpad() {
       if (fullText.includes('"error":')) {
          throw new Error("Agent encountered an error. Check logs.")
       }
+
+      let finalJsonData: any = null
+      if (reachedEnd) {
+        const parts = fullText.split("__FINAL_JSON__")
+        const jsonText = parts[parts.length - 1].trim()
+        try {
+          finalJsonData = JSON.parse(jsonText)
+        } catch (e) {
+          console.error("Failed to parse final JSON from agent stream:", e)
+        }
+      }
       
       setStep(steps.length)
       setPhase("done")
+
+      if (finalJsonData && finalJsonData.zero_to_one) {
+        const { project_id, repo_name } = finalJsonData.zero_to_one
+        if (project_id && onProjectCreated) {
+          setTimeout(() => {
+            onProjectCreated({ id: String(project_id), name: repo_name })
+          }, 1500)
+        }
+      }
     } catch (err) {
       console.error(err)
       setPhase("idle")

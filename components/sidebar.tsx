@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useRef, useEffect } from "react"
 import {
   Rocket,
   Users,
@@ -7,8 +8,14 @@ import {
   Sun,
   Hexagon,
   Sparkles,
+  ChevronsUpDown,
+  Check,
+  FolderGit2,
+  Plus,
+  Search,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Badge } from "@/components/badge"
 
 export type ViewKey = "launchpad" | "roster" | "sprint" | "standup"
 
@@ -22,20 +29,132 @@ const items: { key: ViewKey; label: string; icon: React.ElementType; hint: strin
 export function Sidebar({
   active,
   onSelect,
+  projects = [],
+  selectedProjectId = "",
+  onSelectProject,
+  loadingProjects = false,
 }: {
   active: ViewKey
   onSelect: (key: ViewKey) => void
+  projects?: any[]
+  selectedProjectId?: string
+  onSelectProject?: (id: string) => void
+  loadingProjects?: boolean
 }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const activeProject = projects.find((p) => p.id === selectedProjectId)
+  const filteredProjects = projects.filter((p) =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.name_with_namespace.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   return (
     <aside className="flex w-full shrink-0 flex-col border-border bg-sidebar lg:h-screen lg:w-64 lg:border-r">
-      <div className="flex items-center gap-2.5 border-b border-border px-5 py-4">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <Hexagon className="size-5" />
-        </div>
-        <div className="flex flex-col leading-tight">
-          <span className="text-sm font-semibold tracking-tight text-foreground">OmniLead</span>
-          <span className="text-[11px] text-muted-foreground">Autonomous Tech Lead</span>
-        </div>
+      <div className="relative border-b border-border px-4 py-3" ref={dropdownRef}>
+        <button
+          onClick={() => setIsOpen((prev) => !prev)}
+          className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-sidebar-accent/35 p-2 text-left hover:bg-sidebar-accent/80 hover:border-primary/40 transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+        >
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Hexagon className="size-4.5" />
+          </div>
+          <div className="min-w-0 flex-1 leading-tight">
+            <span className="block truncate text-xs font-semibold text-foreground">
+              {loadingProjects ? (
+                <span className="opacity-50">Loading projects...</span>
+              ) : activeProject ? (
+                activeProject.name
+              ) : (
+                "Select Project"
+              )}
+            </span>
+            <span className="block truncate text-[10px] text-muted-foreground mt-0.5">
+              {activeProject ? `${activeProject.type} Repo` : "OmniLead Workspace"}
+            </span>
+          </div>
+          <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground/80" />
+        </button>
+
+        {isOpen && (
+          <div className="absolute left-4 right-4 top-full z-50 mt-1 max-h-80 flex flex-col rounded-lg border border-border bg-popover p-1.5 shadow-xl animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="relative mb-1.5 flex items-center">
+              <Search className="absolute left-2.5 size-3.5 text-muted-foreground/70" />
+              <input
+                type="text"
+                placeholder="Search projects..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-md border border-border bg-secondary pl-8 pr-2.5 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto max-h-48 flex flex-col gap-0.5 pr-0.5">
+              {filteredProjects.length === 0 ? (
+                <div className="px-2 py-3 text-center text-xs text-muted-foreground">
+                  No projects found
+                </div>
+              ) : (
+                filteredProjects.map((p) => {
+                  const isSelected = p.id === selectedProjectId
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        if (onSelectProject) onSelectProject(p.id)
+                        setIsOpen(false)
+                      }}
+                      className={cn(
+                        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors",
+                        isSelected
+                          ? "bg-sidebar-accent text-foreground"
+                          : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+                      )}
+                    >
+                      <FolderGit2 className={cn("size-3.5 shrink-0", isSelected ? "text-primary" : "text-muted-foreground")} />
+                      <div className="min-w-0 flex-1">
+                        <span className="block truncate font-medium text-foreground">{p.name}</span>
+                        <span className="block truncate text-[9px] text-muted-foreground mt-0.5">{p.name_with_namespace}</span>
+                      </div>
+                      <Badge variant={p.type === "Personal" ? "default" : "secondary"} className="text-[8px] px-1 py-0 scale-90 select-none">
+                        {p.type}
+                      </Badge>
+                      {isSelected && <Check className="size-3 text-primary shrink-0 ml-1" />}
+                    </button>
+                  )
+                })
+              )}
+            </div>
+
+            <div className="mt-1.5 border-t border-border pt-1.5">
+              <button
+                onClick={() => {
+                  onSelect("launchpad")
+                  setIsOpen(false)
+                }}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+              >
+                <Plus className="size-3.5 shrink-0" />
+                Create New Project
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <nav className="flex gap-1 overflow-x-auto p-3 lg:flex-1 lg:flex-col lg:overflow-visible">
@@ -69,7 +188,7 @@ export function Sidebar({
           <Sparkles className="size-4 text-primary" />
           <div className="flex flex-col leading-tight">
             <span className="text-xs font-medium text-foreground">Agent online</span>
-            <span className="text-[11px] text-muted-foreground">Monitoring 3 repos</span>
+            <span className="text-[11px] text-muted-foreground">Monitoring {projects.length} repos</span>
           </div>
           <span className="ml-auto size-2 rounded-full bg-primary shadow-[0_0_8px] shadow-primary" />
         </div>
@@ -77,3 +196,4 @@ export function Sidebar({
     </aside>
   )
 }
+

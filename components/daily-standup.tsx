@@ -13,24 +13,38 @@ function devById(id: string) {
   return developers.find((d) => d.id === id)!
 }
 
-export function DailyStandup() {
+export function DailyStandup({ projectId }: { projectId?: string }) {
   const [phase, setPhase] = useState<Phase>("idle")
   const [entries, setEntries] = useState(mockEntries)
 
   useEffect(() => {
-    fetchAPI("/api/standups/82559130/history")
+    if (!projectId) {
+      setEntries([])
+      setPhase("idle")
+      return
+    }
+    fetchAPI(`/api/standups/${projectId}/history`)
       .then(data => {
         if (data.standups && data.standups.length > 0) {
           try {
             const parsed = JSON.parse(data.standups[0].report)
-            if (Array.isArray(parsed)) setEntries(parsed)
+            if (Array.isArray(parsed)) {
+              setEntries(parsed)
+              setPhase("ready")
+            }
           } catch (e) {
             console.error("Failed to parse standup report:", e)
           }
+        } else {
+          // Fallback to mock entries if no history exists yet
+          setEntries(mockEntries)
         }
       })
-      .catch(console.error)
-  }, [])
+      .catch(err => {
+        console.error(err)
+        setEntries(mockEntries)
+      })
+  }, [projectId])
 
   function generate() {
     setPhase("generating")
