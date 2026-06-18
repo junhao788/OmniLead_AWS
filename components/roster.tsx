@@ -44,7 +44,10 @@ function DeveloperCard({ dev, onDelete, onEdit }: { dev: Developer; onDelete?: (
   const isOwner = dev.id === "owner_admin"
   
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/30 relative">
+    <div className={cn(
+      "flex flex-col gap-4 rounded-xl border p-5 transition-colors relative",
+      isOwner ? "border-primary/40 bg-primary/5 shadow-[0_0_15px_rgba(34,197,94,0.08)]" : "border-border bg-card hover:border-primary/30"
+    )}>
       <div className="absolute right-3 top-3 flex gap-1 z-10">
         {onEdit && (
           <button onClick={() => onEdit(dev)} className="p-1.5 text-muted-foreground hover:bg-secondary rounded-md transition-colors" title="Edit member">
@@ -59,8 +62,16 @@ function DeveloperCard({ dev, onDelete, onEdit }: { dev: Developer; onDelete?: (
       </div>
 
       <div className="flex items-start gap-3 mt-2">
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground">
+        <div className={cn(
+          "flex size-11 shrink-0 items-center justify-center rounded-full text-sm font-semibold relative",
+          isOwner ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+        )}>
           {dev.initials}
+          {isOwner && (
+            <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-background border border-border text-[10px]">
+              👑
+            </span>
+          )}
         </div>
         <div className="min-w-0 flex-1 pr-16">
           <h3 className="truncate text-sm font-semibold text-card-foreground">{dev.name}</h3>
@@ -82,15 +93,17 @@ function DeveloperCard({ dev, onDelete, onEdit }: { dev: Developer; onDelete?: (
           <span className={cn("size-2 rounded-full", status.dot)} />
           {status.label}
         </span>
-        <div className="flex flex-col items-end gap-1 w-1/2">
-          <div className="flex items-center justify-between text-[10px] w-full">
-            <span className="text-muted-foreground">Workload</span>
-            <span className="font-medium text-card-foreground">
-              {dev.openIssues} / {dev.capacity} issues
-            </span>
+        {!isOwner && (
+          <div className="flex flex-col items-end gap-1 w-1/2">
+            <div className="flex items-center justify-between text-[10px] w-full">
+              <span className="text-muted-foreground">Workload</span>
+              <span className="font-medium text-card-foreground">
+                {dev.openIssues} / {dev.capacity} issues
+              </span>
+            </div>
+            <WorkloadBar open={dev.openIssues} capacity={dev.capacity} />
           </div>
-          <WorkloadBar open={dev.openIssues} capacity={dev.capacity} />
-        </div>
+        )}
       </div>
     </div>
   )
@@ -215,14 +228,17 @@ function MemberDialog({
               <label htmlFor="m-gitlab" className="text-xs font-medium text-card-foreground">
                 GitLab Username
               </label>
-              <input
-                id="m-gitlab"
-                value={gitlabUsername}
-                onChange={(e) => setGitlabUsername(e.target.value)}
-                placeholder="jane_doe"
-                className={inputClass}
-                autoFocus
-              />
+              <div className="relative flex items-center">
+                <span className="absolute left-3 text-muted-foreground font-medium">@</span>
+                <input
+                  id="m-gitlab"
+                  value={gitlabUsername}
+                  onChange={(e) => setGitlabUsername(e.target.value.replace(/^@/, ""))}
+                  placeholder="jane_doe"
+                  className={cn(inputClass, "pl-7")}
+                  autoFocus
+                />
+              </div>
             </div>
             <div className="flex flex-col gap-1.5">
               <label htmlFor="m-name" className="text-xs font-medium text-card-foreground">
