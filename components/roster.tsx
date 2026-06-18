@@ -88,28 +88,29 @@ function AddMemberDialog({
   onClose: () => void
   onAdd: (dev: Developer) => void
 }) {
+  const [username, setUsername] = useState("")
   const [name, setName] = useState("")
   const [role, setRole] = useState("")
   const [skills, setSkills] = useState("")
+  const [experienceLevel, setExperienceLevel] = useState("Mid")
   const [availability, setAvailability] = useState<Availability>("available")
   const [openIssues, setOpenIssues] = useState("0")
-  const [capacity, setCapacity] = useState("8")
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim() || !role.trim()) return
-    const cap = Math.max(1, Number(capacity) || 8)
-    const open = Math.min(cap, Math.max(0, Number(openIssues) || 0))
+    if (!name.trim() || !role.trim() || !username.trim()) return
+    const open = Math.max(0, Number(openIssues) || 0)
     
     const newDev = {
       name: name.trim(),
-      username: name.trim().toLowerCase().replace(/\s+/g, ""),
+      username: username.trim(),
       github_username: "",
       role: role.trim(),
       skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
-      experience_level: "Mid",
+      experience_level: experienceLevel,
       availability,
-      timezone: "UTC+8"
+      timezone: "UTC+8",
+      current_open_issues: open
     }
 
     try {
@@ -125,7 +126,7 @@ function AddMemberDialog({
         skills: newDev.skills,
         availability: newDev.availability as Availability,
         openIssues: open,
-        capacity: cap,
+        capacity: 8,
       })
       onClose()
     } catch (err) {
@@ -159,18 +160,32 @@ function AddMemberDialog({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="m-name" className="text-xs font-medium text-card-foreground">
-              Full name
-            </label>
-            <input
-              id="m-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Jane Doe"
-              className={inputClass}
-              autoFocus
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="m-username" className="text-xs font-medium text-card-foreground">
+                Username
+              </label>
+              <input
+                id="m-username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="jane_doe"
+                className={inputClass}
+                autoFocus
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="m-name" className="text-xs font-medium text-card-foreground">
+                Full name
+              </label>
+              <input
+                id="m-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Jane Doe"
+                className={inputClass}
+              />
+            </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -232,17 +247,20 @@ function AddMemberDialog({
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="m-cap" className="text-xs font-medium text-card-foreground">
-                  Capacity
+                <label htmlFor="m-exp" className="text-xs font-medium text-card-foreground">
+                  Experience
                 </label>
-                <input
-                  id="m-cap"
-                  type="number"
-                  min={1}
-                  value={capacity}
-                  onChange={(e) => setCapacity(e.target.value)}
+                <select
+                  id="m-exp"
+                  value={experienceLevel}
+                  onChange={(e) => setExperienceLevel(e.target.value)}
                   className={inputClass}
-                />
+                >
+                  <option value="Junior">Junior</option>
+                  <option value="Mid">Mid</option>
+                  <option value="Senior">Senior</option>
+                  <option value="Lead">Lead</option>
+                </select>
               </div>
             </div>
           </div>
