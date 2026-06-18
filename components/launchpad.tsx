@@ -13,15 +13,15 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/badge"
 import { cn } from "@/lib/utils"
-import { fetchAPI } from "@/lib/api"
+import { API_BASE_URL } from "@/lib/api"
 
 type Phase = "idle" | "launching" | "done"
 
 const steps = [
-  { icon: Cpu, label: "Analyzing project scope" },
   { icon: GitBranch, label: "Scaffolding repositories" },
-  { icon: FileText, label: "Writing & prioritizing tickets" },
   { icon: Sparkles, label: "Assigning to available engineers" },
+  { icon: Cpu, label: "Analyzing project scope" },
+  { icon: FileText, label: "Writing & prioritizing tickets" },
 ]
 
 export function Launchpad() {
@@ -34,24 +34,46 @@ export function Launchpad() {
     setPhase("launching")
     setStep(0)
     
-    // Animation loop
-    let current = 0
-    const timer = setInterval(() => {
-      current = (current + 1) % steps.length
-      setStep(current)
-    }, 2500)
-
     try {
-      await fetchAPI("/api/project/zero_to_one", {
+      const response = await fetch(`${API_BASE_URL}/api/chat`, {
         method: "POST",
-        body: JSON.stringify({ prompt: idea })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          message: `ZERO TO ONE: ${idea}`,
+          stream_output: true 
+        })
       })
-      clearInterval(timer)
+
+      if (!response.ok || !response.body) throw new Error("Failed to start stream")
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder("utf-8")
+      let done = false
+
+      while (!done) {
+        const { value, done: readerDone } = await reader.read()
+        done = readerDone
+        if (value) {
+          const chunk = decoder.decode(value, { stream: true })
+          
+          if (chunk.includes("STEP 1.5 - SCAFFOLD PROJECT")) {
+            setStep(0)
+          } else if (chunk.includes("STEP 2 - TALENT ACQUISITION")) {
+            setStep(1)
+          } else if (chunk.includes("STEP 2.5 - PRODUCT BLUEPRINT")) {
+            setStep(2)
+          } else if (chunk.includes("STEP 3 - DERIVE ISSUES FROM BLUEPRINT")) {
+            setStep(3)
+          } else if (chunk.includes("__FINAL_JSON__")) {
+            setStep(4)
+          }
+        }
+      }
+      
       setStep(steps.length)
       setPhase("done")
     } catch (err) {
       console.error(err)
-      clearInterval(timer)
       setPhase("idle")
       alert("Launch failed. Check console.")
     }
