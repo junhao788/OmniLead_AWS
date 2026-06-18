@@ -143,6 +143,8 @@ export function SprintPlanner() {
   if (loading) {
     return <div className="flex h-32 items-center justify-center"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>
   }
+
+  return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
         <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
