@@ -106,18 +106,22 @@ const AVAILABLE_SKILLS = [
   "Angular", "PHP", "Ruby on Rails", "Swift", "Kotlin", "C#"
 ]
 
-function AddMemberDialog({
+function MemberDialog({
   onClose,
   onAdd,
+  onUpdate,
+  editDev,
 }: {
   onClose: () => void
-  onAdd: (dev: Developer) => void
+  onAdd?: (dev: Developer) => void
+  onUpdate?: (dev: Developer) => void
+  editDev?: Developer
 }) {
-  const [gitlabUsername, setGitlabUsername] = useState("")
-  const [fullname, setFullname] = useState("")
+  const [gitlabUsername, setGitlabUsername] = useState(editDev?.id || "")
+  const [fullname, setFullname] = useState(editDev?.name || "")
   const [email, setEmail] = useState("")
-  const [role, setRole] = useState("")
-  const [skills, setSkills] = useState<string[]>([])
+  const [role, setRole] = useState(editDev?.role || "")
+  const [skills, setSkills] = useState<string[]>(editDev?.skills || [])
   const [experience, setExperience] = useState("Mid")
 
   async function handleSubmit(e: React.FormEvent) {
@@ -136,24 +140,43 @@ function AddMemberDialog({
     }
 
     try {
-      await fetchAPI("/api/team", {
-        method: "POST",
-        body: JSON.stringify(newDev)
-      })
-      onAdd({
-        id: newDev.gitlabUsername,
-        name: newDev.fullname,
-        initials: initialsFromName(newDev.fullname),
-        role: newDev.role,
-        skills: newDev.skills,
-        availability: newDev.availability as Availability,
-        openIssues: newDev.opentask,
-        capacity: 8,
-      })
+      if (editDev) {
+        await fetchAPI(`/api/team/${editDev.id}`, {
+          method: "PUT",
+          body: JSON.stringify(newDev)
+        })
+        if (onUpdate) {
+          onUpdate({
+            ...editDev,
+            id: newDev.gitlabUsername,
+            name: newDev.fullname,
+            initials: initialsFromName(newDev.fullname),
+            role: newDev.role,
+            skills: newDev.skills,
+          })
+        }
+      } else {
+        await fetchAPI("/api/team", {
+          method: "POST",
+          body: JSON.stringify(newDev)
+        })
+        if (onAdd) {
+          onAdd({
+            id: newDev.gitlabUsername,
+            name: newDev.fullname,
+            initials: initialsFromName(newDev.fullname),
+            role: newDev.role,
+            skills: newDev.skills,
+            availability: newDev.availability as Availability,
+            openIssues: newDev.opentask,
+            capacity: 8,
+          })
+        }
+      }
       onClose()
     } catch (err) {
       console.error(err)
-      alert("Failed to add team member")
+      alert(editDev ? "Failed to update team member" : "Failed to add team member")
     }
   }
 
@@ -168,8 +191,12 @@ function AddMemberDialog({
       >
         <div className="mb-5 flex items-start justify-between">
           <div>
-            <h2 className="text-base font-semibold text-card-foreground">Add team member</h2>
-            <p className="text-xs text-muted-foreground">Add an engineer to the company roster.</p>
+            <h2 className="text-base font-semibold text-card-foreground">
+              {editDev ? "Edit team member" : "Add team member"}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {editDev ? "Update engineer details." : "Add an engineer to the company roster."}
+            </p>
           </div>
           <button
             type="button"
@@ -288,7 +315,7 @@ function AddMemberDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={!fullname.trim() || !role.trim() || !gitlabUsername.trim()}>
-              Add member
+              {editDev ? "Save changes" : "Add member"}
             </Button>
           </div>
         </form>
@@ -300,6 +327,7 @@ function AddMemberDialog({
 export function Roster() {
   const [developers, setDevelopers] = useState<Developer[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingDev, setEditingDev] = useState<Developer | null>(null)
   const [loading, setLoading] = useState(true)
 
   const ownerDev: Developer = {
@@ -345,7 +373,7 @@ export function Roster() {
   }
 
   function handleEdit(dev: Developer) {
-    alert("Edit functionality coming soon for " + dev.name)
+    setEditingDev(dev)
   }
 
   const available = developers.filter((d) => d.availability === "available").length
@@ -362,7 +390,7 @@ export function Roster() {
         <p className="text-sm text-muted-foreground">
           {developers.length} engineers on the roster
         </p>
-        <Button onClick={() => setDialogOpen(true)}>
+        <Button onClick={() => { setEditingDev(null); setDialogOpen(true); }}>
           <Plus className="size-4" />
           Add member
         </Button>
@@ -381,10 +409,15 @@ export function Roster() {
         ))}
       </div>
 
-      {dialogOpen && (
-        <AddMemberDialog
-          onClose={() => setDialogOpen(false)}
+      {(dialogOpen || editingDev) && (
+        <MemberDialog
+          editDev={editingDev || undefined}
+          onClose={() => {
+            setDialogOpen(false)
+            setEditingDev(null)
+          }}
           onAdd={(dev) => setDevelopers((prev) => [...prev, dev])}
+          onUpdate={(dev) => setDevelopers((prev) => prev.map((d) => (d.id === editingDev?.id ? dev : d)))}
         />
       )}
     </div>

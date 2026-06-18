@@ -215,21 +215,20 @@ async def remove_team_member(username: str):
 @app.put("/api/team/{username}")
 async def update_team_member(username: str, member: TeamMemberRequest):
     try:
-        with open(TEAM_PROFILES_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            
-        # Find the user
-        user_idx = next((i for i, m in enumerate(data.get("team", [])) if m["username"] == username), None)
-        if user_idx is None:
+        from agent.db import db
+        # 1. Fetch existing user
+        existing = db.get_item('TEAM', f'PROFILE#{username}')
+        if not existing:
             raise HTTPException(status_code=404, detail=f"Member @{username} not found.")
             
-        # If they are changing their username, check for conflicts
+        # 2. Check for username conflict if changing username
         if username != member.username:
-            if any(m["username"] == member.username for m in data["team"]):
+            conflict = db.get_item('TEAM', f'PROFILE#{member.username}')
+            if conflict:
                 raise HTTPException(status_code=409, detail=f"Username @{member.username} is already taken.")
                 
-        # Preserve fields that shouldn't be overridden like current_open_issues
-        existing_issues = data["team"][user_idx].get("current_open_issues", 0)
+        # 3. Preserve fields
+        existing_issues = existing.get("current_open_issues", 0)
         
         updated_member = {
             "name": member.name,
@@ -243,10 +242,12 @@ async def update_team_member(username: str, member: TeamMemberRequest):
             "timezone": member.timezone
         }
         
-        data["team"][user_idx] = updated_member
+        # 4. Save to DynamoDB
+        db.put_item('TEAM', f'PROFILE#{member.username}', updated_member)
         
-        with open(TEAM_PROFILES_PATH, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+        # 5. Delete old profile if username changed
+        if username != member.username:
+            db.delete_item('TEAM', f'PROFILE#{username}')
             
         return {"status": "success", "member": updated_member}
     except HTTPException:
