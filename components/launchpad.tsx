@@ -49,25 +49,41 @@ export function Launchpad() {
       const reader = response.body.getReader()
       const decoder = new TextDecoder("utf-8")
       let done = false
+      let fullText = ""
+      let reachedEnd = false
 
       while (!done) {
         const { value, done: readerDone } = await reader.read()
         done = readerDone
         if (value) {
           const chunk = decoder.decode(value, { stream: true })
+          fullText += chunk
           
-          if (chunk.includes("STEP 1.5 - SCAFFOLD PROJECT")) {
+          if (fullText.includes("STEP 1.5 - SCAFFOLD PROJECT")) {
             setStep(0)
-          } else if (chunk.includes("STEP 2 - TALENT ACQUISITION")) {
+          } 
+          if (fullText.includes("STEP 2 - TALENT ACQUISITION")) {
             setStep(1)
-          } else if (chunk.includes("STEP 2.5 - PRODUCT BLUEPRINT")) {
+          } 
+          if (fullText.includes("STEP 2.5 - PRODUCT BLUEPRINT")) {
             setStep(2)
-          } else if (chunk.includes("STEP 3 - DERIVE ISSUES FROM BLUEPRINT")) {
+          } 
+          if (fullText.includes("STEP 3 - DERIVE ISSUES FROM BLUEPRINT")) {
             setStep(3)
-          } else if (chunk.includes("__FINAL_JSON__")) {
+          } 
+          if (fullText.includes("__FINAL_JSON__")) {
+            reachedEnd = true
             setStep(4)
           }
         }
+      }
+      
+      if (!reachedEnd) {
+        throw new Error("Stream closed prematurely without finishing. It might have timed out.")
+      }
+      
+      if (fullText.includes('"error":')) {
+         throw new Error("Agent encountered an error. Check logs.")
       }
       
       setStep(steps.length)
@@ -75,7 +91,7 @@ export function Launchpad() {
     } catch (err) {
       console.error(err)
       setPhase("idle")
-      alert("Launch failed. Check console.")
+      alert("Launch failed: The connection timed out or the AI Agent crashed.")
     }
   }
 
