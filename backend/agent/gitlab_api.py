@@ -241,17 +241,24 @@ def get_team_profiles() -> dict:
         return {"error": f"Failed to read team profiles: {str(e)}"}
 
 
-def assign_issue_to_developer(issue_iid: int, developer_username: str) -> dict:
+def assign_issue_to_developer(issue_iid: int, developer_username: str, project_id: str = None) -> dict:
     """Assign a specific issue (by IID) to a developer (by username).
     This directly updates the issue assignee via GitLab REST API.
-    Use this after analyzing team profiles to match the best developer to each task."""
+    Use this after analyzing team profiles to match the best developer to each task.
+    
+    Args:
+        issue_iid: The issue IID number.
+        developer_username: The GitLab username of the developer.
+        project_id: The GitLab project ID. If not provided, falls back to the default PROJECT_ID.
+    """
+    target_pid = project_id or PROJECT_ID
     # First, look up the user ID from the username
     user_url = f"{GITLAB_API_URL}/users"
     user_resp = requests.get(user_url, headers=HEADERS, params={"username": developer_username})
     
     if user_resp.status_code != 200 or not user_resp.json():
         # If user not found, still update the issue description with the assignment note
-        url = f"{GITLAB_API_URL}/projects/{PROJECT_ID}/issues/{issue_iid}"
+        url = f"{GITLAB_API_URL}/projects/{target_pid}/issues/{issue_iid}"
         note_url = f"{url}/notes"
         requests.post(note_url, headers=HEADERS, json={
             "body": f"🤖 **AI Tech Lead Assignment**: This task is assigned to **@{developer_username}** based on skill matching and availability analysis."
@@ -266,7 +273,7 @@ def assign_issue_to_developer(issue_iid: int, developer_username: str) -> dict:
     user_id = user_resp.json()[0].get("id")
     
     # Update the issue with the assignee
-    url = f"{GITLAB_API_URL}/projects/{PROJECT_ID}/issues/{issue_iid}"
+    url = f"{GITLAB_API_URL}/projects/{target_pid}/issues/{issue_iid}"
     update_resp = requests.put(url, headers=HEADERS, json={"assignee_ids": [user_id]})
     
     if update_resp.status_code != 200:
@@ -688,16 +695,14 @@ def add_project_member(project_id: str, user_id: int = None, access_level: int =
 
 def get_company_directory() -> dict:
     """Fetch the global company talent pool — all engineers available for project assignment.
-    Returns the full roster from team_profiles.json enriched with their GitLab user IDs.
+    Returns the full roster from AWS DynamoDB enriched with their GitLab user IDs.
     The AI should use this to intelligently select and invite engineers to new projects
     based on skill matching during the Zero-to-One protocol."""
-    import json
-    profiles_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "team_profiles.json")
+    from agent.db import get_team_profiles as db_get_team
     try:
-        with open(profiles_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        data = db_get_team()
     except Exception as e:
-        return {"error": f"Failed to read company directory: {str(e)}"}
+        return {"error": f"Failed to read company directory from DynamoDB: {str(e)}"}
     
     # Enrich each profile with their GitLab user ID (needed for add_project_member)
     enriched_team = []
@@ -760,11 +765,22 @@ def scaffold_project(project_id: str, clone_url: str, framework: str) -> dict:
     Scaffolds a new project using the specified framework and pushes it to GitLab.
     Supported frameworks: react-ts, nextjs, vue-ts, python-fastapi, node-express,
                           fullstack-react-fastapi, fullstack-vue-fastapi, fullstack-react-express
+    
+    Has a fallback mode that uses GitLab Commits API if npm/git CLI are unavailable (e.g. on Render).
     """
     import subprocess
     import tempfile
     import shutil
     import os
+    
+    # Check if git and npm are available
+    has_git = shutil.which("git") is not None
+    has_npm = shutil.which("npm") is not None or shutil.which("npx") is not None
+    
+    # ── FALLBACK: Use GitLab Commits API if CLI tools are missing ──
+    if not has_git or (not has_npm and framework not in ("python-fastapi",)):
+        print(f"[scaffold] CLI tools unavailable (git={has_git}, npm={has_npm}). Using GitLab API fallback.")
+        return _scaffold_via_api(project_id, framework)
     
     auth_url = clone_url.replace("https://", f"https://oauth2:{GITLAB_TOKEN}@")
     temp_dir = tempfile.mkdtemp()
@@ -829,13 +845,56 @@ def scaffold_project(project_id: str, clone_url: str, framework: str) -> dict:
         
         return {"status": "success", "message": f"Successfully scaffolded {framework} and pushed to repository."}
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        # If subprocess approach fails, try API fallback
+        print(f"[scaffold] CLI approach failed: {e}. Trying API fallback.")
+        return _scaffold_via_api(project_id, framework)
     
     finally:
         try:
             shutil.rmtree(temp_dir, ignore_errors=True)
         except:
             pass
+
+
+def _scaffold_via_api(project_id: str, framework: str) -> dict:
+    """Fallback: push scaffold files via GitLab Commits API (no git/npm needed)."""
+    actions = []
+    
+    if framework in ("react-ts", "vue-ts", "nextjs"):
+        actions.append({"action": "update", "file_path": "README.md", "content": f"# Project\n\nScaffolded with `{framework}` by OmniLead AI.\n\n## Getting Started\n\n```bash\nnpm install\nnpm run dev\n```\n"})
+        actions.append({"action": "create", "file_path": "package.json", "content": '{\n  "name": "project",\n  "version": "0.1.0",\n  "private": true,\n  "scripts": {\n    "dev": "echo \\"Run npm install first\\""\n  }\n}\n'})
+        actions.append({"action": "create", "file_path": ".gitignore", "content": "node_modules/\ndist/\n.env\n"})
+    elif framework == "python-fastapi":
+        actions.append({"action": "update", "file_path": "README.md", "content": "# Project\n\nScaffolded with `python-fastapi` by OmniLead AI.\n\n## Getting Started\n\n```bash\npip install -r requirements.txt\nuvicorn app:app --reload\n```\n"})
+        actions.append({"action": "create", "file_path": "app.py", "content": "from fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get('/')\ndef read_root():\n    return {'Hello': 'World'}\n"})
+        actions.append({"action": "create", "file_path": "requirements.txt", "content": "fastapi\nuvicorn\n"})
+        actions.append({"action": "create", "file_path": ".gitignore", "content": "__pycache__/\n*.pyc\n.env\nvenv/\n"})
+    elif framework == "node-express":
+        actions.append({"action": "update", "file_path": "README.md", "content": "# Project\n\nScaffolded with `node-express` by OmniLead AI.\n\n## Getting Started\n\n```bash\nnpm install\nnode index.js\n```\n"})
+        actions.append({"action": "create", "file_path": "index.js", "content": "const express = require('express');\nconst app = express();\n\napp.get('/', (req, res) => res.send('Hello World'));\n\napp.listen(3000, () => console.log('Server ready'));\n"})
+        actions.append({"action": "create", "file_path": "package.json", "content": '{\n  "name": "project",\n  "version": "1.0.0",\n  "main": "index.js",\n  "dependencies": {\n    "express": "^4.18.0"\n  }\n}\n'})
+        actions.append({"action": "create", "file_path": ".gitignore", "content": "node_modules/\n.env\n"})
+    elif framework.startswith("fullstack-"):
+        actions.append({"action": "update", "file_path": "README.md", "content": f"# Project\n\nScaffolded as `{framework}` mono-repo by OmniLead AI.\n\n## Structure\n\n- `/frontend` — UI application\n- `/backend` — API server\n"})
+        actions.append({"action": "create", "file_path": "frontend/.gitkeep", "content": ""})
+        actions.append({"action": "create", "file_path": "backend/.gitkeep", "content": ""})
+        if "fastapi" in framework:
+            actions.append({"action": "create", "file_path": "backend/app.py", "content": "from fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get('/')\ndef read_root():\n    return {'Hello': 'World'}\n"})
+            actions.append({"action": "create", "file_path": "backend/requirements.txt", "content": "fastapi\nuvicorn\n"})
+        actions.append({"action": "create", "file_path": ".gitignore", "content": "node_modules/\n__pycache__/\ndist/\n.env\n"})
+    else:
+        actions.append({"action": "update", "file_path": "README.md", "content": f"# Project\n\nScaffolded by OmniLead AI.\nFramework: {framework}\n"})
+    
+    url = f"{GITLAB_API_URL}/projects/{project_id}/repository/commits"
+    payload = {
+        "branch": "main",
+        "commit_message": f"Initial scaffold ({framework}) from Project Agent AI",
+        "actions": actions,
+    }
+    resp = requests.post(url, headers=HEADERS, json=payload)
+    if resp.status_code in (200, 201):
+        return {"status": "success", "message": f"Scaffolded {framework} via GitLab API (fallback mode)."}
+    return {"status": "error", "message": f"API scaffold failed: {resp.status_code} - {resp.text[:300]}"}
 
 
 # ── Auto-Remediate: File Read + Commit Push ───────────────────────────

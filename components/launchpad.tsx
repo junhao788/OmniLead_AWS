@@ -155,7 +155,7 @@ export function Launchpad() {
         <p className="mb-5 text-xs text-muted-foreground">
           {phase === "idle" && "Waiting for a project idea to begin."}
           {phase === "launching" && "OmniLead is working in the background…"}
-          {phase === "done" && "Project bootstrapped. Tickets are in the Sprint Planner."}
+          {phase === "done" && "Project bootstrapped. Tickets are live on GitLab."}
         </p>
 
         <ol className="flex flex-col gap-2.5">
