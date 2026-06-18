@@ -352,7 +352,7 @@ function MemberDialog({
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="m-exp" className="text-xs font-medium text-card-foreground">
                 Experience
@@ -368,35 +368,6 @@ function MemberDialog({
                 <option value="Senior">Senior</option>
                 <option value="Lead">Lead</option>
               </select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="m-avail" className="text-xs font-medium text-card-foreground">
-                Availability
-              </label>
-              <select
-                id="m-avail"
-                value={availability}
-                onChange={(e) => setAvailability(e.target.value)}
-                className={inputClass}
-              >
-                <option value="available">Available</option>
-                <option value="busy">Heads down</option>
-                <option value="in-meeting">In meeting</option>
-                <option value="off">Off today</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="m-open" className="text-xs font-medium text-card-foreground">
-                Current workload
-              </label>
-              <input
-                id="m-open"
-                type="number"
-                min="0"
-                value={opentask}
-                onChange={(e) => setOpentask(parseInt(e.target.value) || 0)}
-                className={inputClass}
-              />
             </div>
           </div>
           </div>
