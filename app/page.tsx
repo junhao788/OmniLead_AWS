@@ -63,7 +63,7 @@ export default function Page() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row">
+    <div className="flex min-h-screen flex-col lg:flex-row lg:h-screen lg:overflow-hidden">
       <Sidebar
         active={view}
         onSelect={setView}
