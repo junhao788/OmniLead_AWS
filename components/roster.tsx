@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, X, Loader2 } from "lucide-react"
+import { Plus, X, Loader2, Trash2, Edit2 } from "lucide-react"
 import type { Availability, Developer } from "@/lib/data"
 import { Badge } from "@/components/badge"
 import { Button } from "@/components/ui/button"
@@ -39,24 +39,36 @@ function WorkloadBar({ open, capacity }: { open: number; capacity: number }) {
   )
 }
 
-function DeveloperCard({ dev }: { dev: Developer }) {
+function DeveloperCard({ dev, onDelete, onEdit }: { dev: Developer; onDelete?: (id: string) => void; onEdit?: (dev: Developer) => void }) {
   const status = availabilityConfig[dev.availability]
+  const isOwner = dev.id === "owner_admin"
+  
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/30">
-      <div className="flex items-start gap-3">
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/30 relative">
+      <div className="absolute right-3 top-3 flex gap-1 z-10">
+        {onEdit && (
+          <button onClick={() => onEdit(dev)} className="p-1.5 text-muted-foreground hover:bg-secondary rounded-md transition-colors" title="Edit member">
+            <Edit2 className="size-3.5" />
+          </button>
+        )}
+        {onDelete && !isOwner && (
+          <button onClick={() => onDelete(dev.id)} className="p-1.5 text-destructive/70 hover:bg-destructive/10 hover:text-destructive rounded-md transition-colors" title="Delete member">
+            <Trash2 className="size-3.5" />
+          </button>
+        )}
+      </div>
+
+      <div className="flex items-start gap-3 mt-2">
         <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground">
           {dev.initials}
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 pr-16">
           <h3 className="truncate text-sm font-semibold text-card-foreground">{dev.name}</h3>
-          <p className="truncate text-xs text-muted-foreground">{dev.role}</p>
+          <p className="truncate text-xs font-medium text-primary">@{dev.id}</p>
+          <p className="truncate text-xs text-muted-foreground mt-0.5">{dev.role}</p>
         </div>
-        <span className={cn("flex items-center gap-1.5 text-xs font-medium", status.text)}>
-          <span className={cn("size-2 rounded-full", status.dot)} />
-          {status.label}
-        </span>
       </div>
-
+      
       <div className="flex flex-wrap gap-1.5">
         {dev.skills.map((skill) => (
           <Badge key={skill} variant="outline">
@@ -65,14 +77,20 @@ function DeveloperCard({ dev }: { dev: Developer }) {
         ))}
       </div>
 
-      <div className="mt-auto">
-        <div className="mb-1.5 flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Workload</span>
-          <span className="font-medium text-card-foreground">
-            {dev.openIssues} / {dev.capacity} open issues
-          </span>
+      <div className="mt-auto flex items-center justify-between">
+        <span className={cn("flex items-center gap-1.5 text-xs font-medium", status.text)}>
+          <span className={cn("size-2 rounded-full", status.dot)} />
+          {status.label}
+        </span>
+        <div className="flex flex-col items-end gap-1 w-1/2">
+          <div className="flex items-center justify-between text-[10px] w-full">
+            <span className="text-muted-foreground">Workload</span>
+            <span className="font-medium text-card-foreground">
+              {dev.openIssues} / {dev.capacity} issues
+            </span>
+          </div>
+          <WorkloadBar open={dev.openIssues} capacity={dev.capacity} />
         </div>
-        <WorkloadBar open={dev.openIssues} capacity={dev.capacity} />
       </div>
     </div>
   )
@@ -284,24 +302,51 @@ export function Roster() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
+  const ownerDev: Developer = {
+    id: "owner_admin",
+    name: "System Owner",
+    initials: "SO",
+    role: "Product Owner",
+    skills: ["Leadership", "Product", "Agile"],
+    availability: "available",
+    openIssues: 0,
+    capacity: 8,
+  }
+
   useEffect(() => {
     fetchAPI("/api/team")
       .then((data) => {
         const mapped = data.team.map((d: any) => ({
-          id: d.username || `d-${Date.now()}`,
-          name: d.name,
-          initials: initialsFromName(d.name),
+          id: d.username || d.gitlabUsername || `d-${Date.now()}`,
+          name: d.name || d.fullname,
+          initials: initialsFromName(d.name || d.fullname || "Dev"),
           role: d.role || "Developer",
           skills: d.skills || [],
           availability: (d.availability?.toLowerCase() || "available") as Availability,
-          openIssues: d.current_open_issues || 0,
+          openIssues: d.current_open_issues || d.opentask || 0,
           capacity: 8,
         }))
-        setDevelopers(mapped)
+        setDevelopers([ownerDev, ...mapped])
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))
   }, [])
+
+  async function handleDelete(id: string) {
+    if (id === "owner_admin") return
+    if (!confirm("Are you sure you want to remove this member?")) return
+    try {
+      await fetchAPI(`/api/team/${id}`, { method: "DELETE" })
+      setDevelopers((prev) => prev.filter((d) => d.id !== id))
+    } catch (err) {
+      console.error(err)
+      alert("Failed to delete member")
+    }
+  }
+
+  function handleEdit(dev: Developer) {
+    alert("Edit functionality coming soon for " + dev.name)
+  }
 
   const available = developers.filter((d) => d.availability === "available").length
   const totalOpen = developers.reduce((sum, d) => sum + d.openIssues, 0)
@@ -330,9 +375,9 @@ export function Roster() {
         <StatCard label="Avg load" value={`${Math.round((totalOpen / totalCapacity) * 100)}%`} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
         {developers.map((dev) => (
-          <DeveloperCard key={dev.id} dev={dev} />
+          <DeveloperCard key={dev.id} dev={dev} onDelete={handleDelete} onEdit={handleEdit} />
         ))}
       </div>
 
