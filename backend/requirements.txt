@@ -2,3 +2,7 @@ google-adk>=0.1.0
 python-dotenv
 mcp
 boto3
+fastapi
+uvicorn
+pydantic
+requests
