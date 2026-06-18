@@ -65,12 +65,12 @@ export function Sidebar({
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[3px] transition-all duration-200 animate-in fade-in"
+          className="fixed inset-0 z-30 bg-black/45 backdrop-blur-[3px] transition-all duration-200 animate-in fade-in lg:left-64"
           onClick={() => setIsOpen(false)}
         />
       )}
       
-      <aside className="flex w-full shrink-0 flex-col border-border bg-sidebar lg:h-screen lg:w-64 lg:border-r z-50">
+      <aside className="flex w-full shrink-0 flex-col border-border bg-sidebar lg:h-screen lg:w-64 lg:border-r z-40 relative">
         <div className="flex items-center gap-2.5 border-b border-border px-5 py-4">
           <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Hexagon className="size-5" />
@@ -107,90 +107,93 @@ export function Sidebar({
           })}
         </nav>
 
-      <div className="border-t border-border p-3 hidden lg:block">
-        <div className="relative" ref={dropdownRef}>
-          {isOpen && (
-            <div className="absolute bottom-full left-0 w-[360px] z-50 mb-2 flex flex-col rounded-lg border border-border bg-popover p-2 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-150">
-              <div className="relative mb-2 flex items-center">
-                <Search className="absolute left-2.5 size-3.5 text-muted-foreground/70" />
-                <input
-                  type="text"
-                  placeholder="Search projects..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-md border border-border bg-secondary pl-8 pr-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-                  autoFocus
-                />
-              </div>
+        <div className="border-t border-border p-3 hidden lg:block">
+          <div className="relative" ref={dropdownRef}>
+            {isOpen && (
+              <div className="absolute bottom-full left-0 w-full z-50 flex flex-col rounded-t-lg border-x border-t border-border bg-popover p-2 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-150">
+                <div className="relative mb-2 flex items-center">
+                  <Search className="absolute left-2.5 size-3.5 text-muted-foreground/70" />
+                  <input
+                    type="text"
+                    placeholder="Search projects..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full rounded-md border border-border bg-secondary pl-8 pr-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                    autoFocus
+                  />
+                </div>
 
-              <div className="flex-1 overflow-y-auto max-h-56 flex flex-col gap-0.5 pr-0.5">
-                {filteredProjects.length === 0 ? (
-                  <div className="px-2 py-3 text-center text-xs text-muted-foreground">
-                    No projects found
-                  </div>
-                ) : (
-                  filteredProjects.map((p) => {
-                    const isSelected = p.id === selectedProjectId
-                    return (
-                      <button
-                        key={p.id}
-                        onClick={() => {
-                          if (onSelectProject) onSelectProject(p.id)
-                          setIsOpen(false)
-                        }}
-                        className={cn(
-                          "flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left text-xs transition-colors",
-                          isSelected
-                            ? "bg-sidebar-accent text-foreground"
-                            : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
-                        )}
-                      >
-                        <FolderGit2 className={cn("size-4 shrink-0", isSelected ? "text-primary" : "text-muted-foreground")} />
-                        <div className="min-w-0 flex-1">
-                          <span className="block truncate font-semibold text-foreground text-[13px]">{p.name}</span>
-                          <span className="block truncate text-[10px] text-muted-foreground mt-0.5">{p.name_with_namespace}</span>
-                        </div>
-                        <Badge variant={p.type === "Personal" ? "default" : "secondary"} className="text-[9px] px-1.5 py-0.5 select-none shrink-0">
-                          {p.type}
-                        </Badge>
-                        {isSelected && <Check className="size-3.5 text-primary shrink-0 ml-1" />}
-                      </button>
-                    )
-                  })
-                )}
+                <div className="flex-1 overflow-y-auto max-h-56 flex flex-col gap-0.5 pr-0.5">
+                  {filteredProjects.length === 0 ? (
+                    <div className="px-2 py-3 text-center text-xs text-muted-foreground">
+                      No projects found
+                    </div>
+                  ) : (
+                    filteredProjects.map((p) => {
+                      const isSelected = p.id === selectedProjectId
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={() => {
+                            if (onSelectProject) onSelectProject(p.id)
+                            setIsOpen(false)
+                          }}
+                          className={cn(
+                            "flex w-full items-start gap-3 rounded-md px-2.5 py-2 text-left text-xs transition-colors",
+                            isSelected
+                              ? "bg-sidebar-accent text-foreground"
+                              : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+                          )}
+                        >
+                          <FolderGit2 className={cn("size-4 shrink-0 mt-0.5", isSelected ? "text-primary" : "text-muted-foreground")} />
+                          <div className="min-w-0 flex-1">
+                            <span className="block break-words font-semibold text-foreground text-[13px] leading-tight">{p.name}</span>
+                            <span className="block break-words text-[10px] text-muted-foreground mt-0.5 leading-tight">{p.name_with_namespace}</span>
+                          </div>
+                          <Badge variant={p.type === "Personal" ? "default" : "secondary"} className="text-[9px] px-1.5 py-0.5 select-none shrink-0 mt-0.5">
+                            {p.type}
+                          </Badge>
+                          {isSelected && <Check className="size-3.5 text-primary shrink-0 ml-1 mt-0.5" />}
+                        </button>
+                      )
+                    })
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <button
-            onClick={() => setIsOpen((prev) => !prev)}
-            className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-sidebar-accent/35 p-2 text-left hover:bg-sidebar-accent/80 hover:border-primary/40 transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 z-50 relative"
-            aria-haspopup="listbox"
-            aria-expanded={isOpen}
-          >
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary relative">
-              <FolderGit2 className="size-4.5" />
-              <span className="absolute -top-0.5 -right-0.5 size-1.5 rounded-full bg-primary shadow-[0_0_6px] shadow-primary animate-pulse" />
-            </div>
-            <div className="min-w-0 flex-1 leading-tight">
-              <span className="block truncate text-xs font-semibold text-foreground">
-                {loadingProjects ? (
-                  <span className="opacity-50">Loading projects...</span>
-                ) : activeProject ? (
-                  activeProject.name
-                ) : (
-                  "Select Project"
-                )}
-              </span>
-              <span className="block truncate text-[10px] text-muted-foreground mt-0.5">
-                {activeProject ? `${activeProject.type} Repo` : "OmniLead Workspace"}
-              </span>
-            </div>
-            <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground/80" />
-          </button>
+            <button
+              onClick={() => setIsOpen((prev) => !prev)}
+              className={cn(
+                "flex w-full items-center gap-2.5 border border-border p-2 text-left hover:bg-sidebar-accent/80 hover:border-primary/40 transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 z-50 relative",
+                isOpen ? "bg-sidebar-accent/80 rounded-b-lg border-t-transparent" : "bg-sidebar-accent/35 rounded-lg"
+              )}
+              aria-haspopup="listbox"
+              aria-expanded={isOpen}
+            >
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary relative">
+                <FolderGit2 className="size-4.5" />
+                <span className="absolute -top-0.5 -right-0.5 size-1.5 rounded-full bg-primary shadow-[0_0_6px] shadow-primary animate-pulse" />
+              </div>
+              <div className="min-w-0 flex-1 leading-tight">
+                <span className="block truncate text-xs font-semibold text-foreground">
+                  {loadingProjects ? (
+                    <span className="opacity-50">Loading projects...</span>
+                  ) : activeProject ? (
+                    activeProject.name
+                  ) : (
+                    "Select Project"
+                  )}
+                </span>
+                <span className="block truncate text-[10px] text-muted-foreground mt-0.5">
+                  {activeProject ? `${activeProject.type} Repo` : "OmniLead Workspace"}
+                </span>
+              </div>
+              <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground/80" />
+            </button>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
     </>
   )
 }
