@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, X, Loader2, Trash2, Edit2 } from "lucide-react"
+import { Plus, X, Loader2, Trash2, Edit2, Check, AlertCircle } from "lucide-react"
 import type { Availability, Developer } from "@/lib/data"
 import { Badge } from "@/components/badge"
 import { Button } from "@/components/ui/button"
@@ -136,10 +136,15 @@ function MemberDialog({
   const [role, setRole] = useState(editDev?.role || "")
   const [skills, setSkills] = useState<string[]>(editDev?.skills || [])
   const [experience, setExperience] = useState("Mid")
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!fullname.trim() || !role.trim() || !gitlabUsername.trim()) return
+    setError(null)
+    setIsSubmitting(true)
     
     const newDev = {
       username: gitlabUsername.trim(),
@@ -186,11 +191,42 @@ function MemberDialog({
           })
         }
       }
-      onClose()
+      setSuccess(true)
+      setTimeout(() => {
+        onClose()
+      }, 2000)
     } catch (err) {
       console.error(err)
-      alert(editDev ? "Failed to update team member" : "Failed to add team member")
+      setError(editDev ? "Failed to update team member. Please try again." : "Failed to add team member. Please try again.")
+    } finally {
+      setIsSubmitting(false)
     }
+  }
+
+  if (success) {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm"
+        onClick={onClose}
+      >
+        <div
+          className="w-full max-w-sm rounded-xl border border-primary/20 bg-card p-8 shadow-2xl flex flex-col items-center justify-center text-center transform animate-in zoom-in-95 duration-300"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex size-16 items-center justify-center rounded-full bg-primary/10 mb-4">
+            <Check className="size-8 text-primary" />
+          </div>
+          <h2 className="text-xl font-semibold text-card-foreground">
+            {editDev ? "Update Successful!" : "Member Added!"}
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {editDev 
+              ? `${fullname}'s profile has been updated.` 
+              : `${fullname} has been added to the roster.`}
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -222,6 +258,13 @@ function MemberDialog({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {error && (
+            <div className="flex items-center gap-2 rounded-lg bg-destructive/15 p-3 text-sm text-destructive">
+              <AlertCircle className="size-4" />
+              <p>{error}</p>
+            </div>
+          )}
+          
           <div className="flex flex-col gap-4 max-h-[50vh] min-h-[30vh] overflow-y-auto px-1 pb-1">
             <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
@@ -327,11 +370,11 @@ function MemberDialog({
           </div>
 
           <div className="mt-2 flex justify-end gap-2 pt-2 border-t border-border/50">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!fullname.trim() || !role.trim() || !gitlabUsername.trim()}>
-              {editDev ? "Save changes" : "Add member"}
+            <Button type="submit" disabled={!fullname.trim() || !role.trim() || !gitlabUsername.trim() || isSubmitting}>
+              {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : (editDev ? "Save changes" : "Add member")}
             </Button>
           </div>
         </form>
