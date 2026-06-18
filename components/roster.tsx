@@ -145,7 +145,7 @@ function AddMemberDialog({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-2xl"
+        className="w-full max-w-2xl rounded-xl border border-border bg-card p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-start justify-between">
