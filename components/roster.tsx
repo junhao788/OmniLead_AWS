@@ -81,6 +81,13 @@ function DeveloperCard({ dev }: { dev: Developer }) {
 const inputClass =
   "w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-card-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
 
+const AVAILABLE_SKILLS = [
+  "React", "TypeScript", "Node.js", "Python", "AWS", "Next.js", 
+  "Tailwind CSS", "Go", "Docker", "Kubernetes", "PostgreSQL", 
+  "MongoDB", "GraphQL", "Java", "C++", "Rust", "Vue.js", 
+  "Angular", "PHP", "Ruby on Rails", "Swift", "Kotlin", "C#"
+]
+
 function AddMemberDialog({
   onClose,
   onAdd,
@@ -92,7 +99,7 @@ function AddMemberDialog({
   const [fullname, setFullname] = useState("")
   const [email, setEmail] = useState("")
   const [role, setRole] = useState("")
-  const [skills, setSkills] = useState("")
+  const [skills, setSkills] = useState<string[]>([])
   const [experience, setExperience] = useState("Mid")
 
   async function handleSubmit(e: React.FormEvent) {
@@ -105,7 +112,7 @@ function AddMemberDialog({
       email: email.trim(),
       role: role.trim(),
       experience: experience,
-      skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
+      skills: skills,
       availability: "available",
       opentask: 0
     }
@@ -157,7 +164,8 @@ function AddMemberDialog({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-4 max-h-[50vh] min-h-[30vh] overflow-y-auto px-1 pb-1">
+            <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="m-gitlab" className="text-xs font-medium text-card-foreground">
                 GitLab Username
@@ -214,18 +222,30 @@ function AddMemberDialog({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="m-skills" className="text-xs font-medium text-card-foreground">
-                Skills <span className="text-muted-foreground">(comma separated)</span>
+            <div className="flex flex-col gap-1.5 col-span-2">
+              <label className="text-xs font-medium text-card-foreground">
+                Skills
               </label>
-              <input
-                id="m-skills"
-                value={skills}
-                onChange={(e) => setSkills(e.target.value)}
-                placeholder="React, TypeScript, Node.js"
-                className={inputClass}
-              />
+              <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto rounded-lg border border-border bg-secondary p-2">
+                {AVAILABLE_SKILLS.map((skill) => (
+                  <label key={skill} className="flex items-center gap-2 text-xs text-card-foreground cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={skills.includes(skill)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSkills([...skills, skill])
+                        else setSkills(skills.filter((s) => s !== skill))
+                      }}
+                      className="rounded border-border"
+                    />
+                    {skill}
+                  </label>
+                ))}
+              </div>
             </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="m-exp" className="text-xs font-medium text-card-foreground">
                 Experience
@@ -243,8 +263,9 @@ function AddMemberDialog({
               </select>
             </div>
           </div>
+          </div>
 
-          <div className="mt-2 flex justify-end gap-2">
+          <div className="mt-2 flex justify-end gap-2 pt-2 border-t border-border/50">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
