@@ -234,9 +234,9 @@ def get_project_info(project_id: str) -> dict:
 def get_team_profiles() -> dict:
     """Get the team roster with each developer's name, skills, experience level, current workload, and availability.
     Use this tool to understand team capacity before assigning tasks."""
-    import json
     from agent.db import get_team_profiles as db_get_team
-    return db_get_team()
+    try:
+        return db_get_team()
     except Exception as e:
         return {"error": f"Failed to read team profiles: {str(e)}"}
 
