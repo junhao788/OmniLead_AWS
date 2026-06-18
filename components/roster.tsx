@@ -142,14 +142,14 @@ function MemberDialog({
     if (!fullname.trim() || !role.trim() || !gitlabUsername.trim()) return
     
     const newDev = {
-      gitlabUsername: gitlabUsername.trim(),
-      fullname: fullname.trim(),
-      email: email.trim(),
+      username: gitlabUsername.trim(),
+      name: fullname.trim(),
+      github_username: "",
       role: role.trim(),
-      experience: experience,
+      experience_level: experience,
       skills: skills,
       availability: "available",
-      opentask: 0
+      timezone: "UTC+8"
     }
 
     try {
@@ -161,9 +161,9 @@ function MemberDialog({
         if (onUpdate) {
           onUpdate({
             ...editDev,
-            id: newDev.gitlabUsername,
-            name: newDev.fullname,
-            initials: initialsFromName(newDev.fullname),
+            id: newDev.username,
+            name: newDev.name,
+            initials: initialsFromName(newDev.name),
             role: newDev.role,
             skills: newDev.skills,
           })
@@ -175,9 +175,9 @@ function MemberDialog({
         })
         if (onAdd) {
           onAdd({
-            id: newDev.gitlabUsername,
-            name: newDev.fullname,
-            initials: initialsFromName(newDev.fullname),
+            id: newDev.username,
+            name: newDev.name,
+            initials: initialsFromName(newDev.name),
             role: newDev.role,
             skills: newDev.skills,
             availability: newDev.availability as Availability,
