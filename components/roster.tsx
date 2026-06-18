@@ -81,13 +81,6 @@ function DeveloperCard({ dev }: { dev: Developer }) {
 const inputClass =
   "w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-card-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
 
-const AVAILABLE_SKILLS = [
-  "React", "TypeScript", "Node.js", "Python", "AWS", "Next.js", 
-  "Tailwind CSS", "Go", "Docker", "Kubernetes", "PostgreSQL", 
-  "MongoDB", "GraphQL", "Java", "C++", "Rust", "Vue.js", 
-  "Angular", "PHP", "Ruby on Rails", "Swift", "Kotlin", "C#"
-]
-
 function AddMemberDialog({
   onClose,
   onAdd,
@@ -99,7 +92,7 @@ function AddMemberDialog({
   const [fullname, setFullname] = useState("")
   const [email, setEmail] = useState("")
   const [role, setRole] = useState("")
-  const [skills, setSkills] = useState<string[]>([])
+  const [skills, setSkills] = useState("")
   const [experience, setExperience] = useState("Mid")
 
   async function handleSubmit(e: React.FormEvent) {
@@ -112,7 +105,7 @@ function AddMemberDialog({
       email: email.trim(),
       role: role.trim(),
       experience: experience,
-      skills: skills,
+      skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
       availability: "available",
       opentask: 0
     }
@@ -221,30 +214,18 @@ function AddMemberDialog({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5 col-span-2">
+            <div className="flex flex-col gap-1.5">
               <label htmlFor="m-skills" className="text-xs font-medium text-card-foreground">
-                Skills <span className="text-muted-foreground">(Hold Ctrl/Cmd to select multiple)</span>
+                Skills <span className="text-muted-foreground">(comma separated)</span>
               </label>
-              <select
+              <input
                 id="m-skills"
-                multiple
                 value={skills}
-                onChange={(e) => {
-                  const options = Array.from(e.target.selectedOptions)
-                  setSkills(options.map((o) => o.value))
-                }}
-                className={cn(inputClass, "h-32")}
-              >
-                {AVAILABLE_SKILLS.map((skill) => (
-                  <option key={skill} value={skill}>
-                    {skill}
-                  </option>
-                ))}
-              </select>
+                onChange={(e) => setSkills(e.target.value)}
+                placeholder="React, TypeScript, Node.js"
+                className={inputClass}
+              />
             </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="m-exp" className="text-xs font-medium text-card-foreground">
                 Experience
