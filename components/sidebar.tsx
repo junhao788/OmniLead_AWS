@@ -110,7 +110,12 @@ export function Sidebar({
         <div className="relative border-t border-border p-3 hidden lg:block" ref={dropdownRef}>
           <button
             onClick={() => setIsOpen((prev) => !prev)}
-            className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-sidebar-accent/35 p-2 text-left hover:bg-sidebar-accent/80 hover:border-primary/40 transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className={cn(
+              "flex w-full items-center gap-2.5 border p-2 text-left transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 z-50 relative",
+              isOpen
+                ? "bg-popover border-border border-t-0 rounded-t-none rounded-b-lg shadow-xl"
+                : "bg-sidebar-accent/35 border-border rounded-lg hover:bg-sidebar-accent/80 hover:border-primary/40"
+            )}
             aria-haspopup="listbox"
             aria-expanded={isOpen}
           >
@@ -136,20 +141,20 @@ export function Sidebar({
           </button>
 
           {isOpen && (
-            <div className="absolute bottom-full left-3 right-3 z-50 mb-1.5 max-h-80 flex flex-col rounded-lg border border-border bg-popover p-1.5 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-150">
-              <div className="relative mb-1.5 flex items-center">
+            <div className="absolute bottom-full left-3 w-[360px] z-50 flex flex-col rounded-t-lg rounded-b-none border border-border border-b-0 bg-popover p-2 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-150">
+              <div className="relative mb-2 flex items-center">
                 <Search className="absolute left-2.5 size-3.5 text-muted-foreground/70" />
                 <input
                   type="text"
                   placeholder="Search projects..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-md border border-border bg-secondary pl-8 pr-2.5 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                  className="w-full rounded-md border border-border bg-secondary pl-8 pr-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
                   autoFocus
                 />
               </div>
 
-              <div className="flex-1 overflow-y-auto max-h-48 flex flex-col gap-0.5 pr-0.5">
+              <div className="flex-1 overflow-y-auto max-h-56 flex flex-col gap-0.5 pr-0.5">
                 {filteredProjects.length === 0 ? (
                   <div className="px-2 py-3 text-center text-xs text-muted-foreground">
                     No projects found
@@ -165,21 +170,21 @@ export function Sidebar({
                           setIsOpen(false)
                         }}
                         className={cn(
-                          "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors",
+                          "flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left text-xs transition-colors",
                           isSelected
                             ? "bg-sidebar-accent text-foreground"
                             : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
                         )}
                       >
-                        <FolderGit2 className={cn("size-3.5 shrink-0", isSelected ? "text-primary" : "text-muted-foreground")} />
+                        <FolderGit2 className={cn("size-4 shrink-0", isSelected ? "text-primary" : "text-muted-foreground")} />
                         <div className="min-w-0 flex-1">
-                          <span className="block truncate font-medium text-foreground">{p.name}</span>
-                          <span className="block truncate text-[9px] text-muted-foreground mt-0.5">{p.name_with_namespace}</span>
+                          <span className="block truncate font-semibold text-foreground text-[13px]">{p.name}</span>
+                          <span className="block truncate text-[10px] text-muted-foreground mt-0.5">{p.name_with_namespace}</span>
                         </div>
-                        <Badge variant={p.type === "Personal" ? "default" : "secondary"} className="text-[8px] px-1 py-0 scale-90 select-none">
+                        <Badge variant={p.type === "Personal" ? "default" : "secondary"} className="text-[9px] px-1.5 py-0.5 select-none shrink-0">
                           {p.type}
                         </Badge>
-                        {isSelected && <Check className="size-3 text-primary shrink-0 ml-1" />}
+                        {isSelected && <Check className="size-3.5 text-primary shrink-0 ml-1" />}
                       </button>
                     )
                   })
