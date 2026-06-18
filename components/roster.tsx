@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, X } from "lucide-react"
-import { developers as seedDevelopers, type Availability, type Developer } from "@/lib/data"
+import { useState, useEffect } from "react"
+import { Plus, X, Loader2 } from "lucide-react"
+import type { Availability, Developer } from "@/lib/data"
 import { Badge } from "@/components/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { fetchAPI } from "@/lib/api"
 
 const availabilityConfig: Record<Availability, { label: string; dot: string; text: string }> = {
   available: { label: "Available", dot: "bg-primary", text: "text-primary" },
@@ -94,25 +95,43 @@ function AddMemberDialog({
   const [openIssues, setOpenIssues] = useState("0")
   const [capacity, setCapacity] = useState("8")
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim() || !role.trim()) return
     const cap = Math.max(1, Number(capacity) || 8)
     const open = Math.min(cap, Math.max(0, Number(openIssues) || 0))
-    onAdd({
-      id: `d-${Date.now()}`,
+    
+    const newDev = {
       name: name.trim(),
-      initials: initialsFromName(name),
+      username: name.trim().toLowerCase().replace(/\s+/g, ""),
+      github_username: "",
       role: role.trim(),
-      skills: skills
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
+      skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
+      experience_level: "Mid",
       availability,
-      openIssues: open,
-      capacity: cap,
-    })
-    onClose()
+      timezone: "UTC+8"
+    }
+
+    try {
+      await fetchAPI("/api/team", {
+        method: "POST",
+        body: JSON.stringify(newDev)
+      })
+      onAdd({
+        id: newDev.username,
+        name: newDev.name,
+        initials: initialsFromName(newDev.name),
+        role: newDev.role,
+        skills: newDev.skills,
+        availability: newDev.availability as Availability,
+        openIssues: open,
+        capacity: cap,
+      })
+      onClose()
+    } catch (err) {
+      console.error(err)
+      alert("Failed to add team member")
+    }
   }
 
   return (
@@ -243,12 +262,36 @@ function AddMemberDialog({
 }
 
 export function Roster() {
-  const [developers, setDevelopers] = useState<Developer[]>(seedDevelopers)
+  const [developers, setDevelopers] = useState<Developer[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchAPI("/api/team")
+      .then((data) => {
+        const mapped = data.team.map((d: any) => ({
+          id: d.username || `d-${Date.now()}`,
+          name: d.name,
+          initials: initialsFromName(d.name),
+          role: d.role || "Developer",
+          skills: d.skills || [],
+          availability: (d.availability?.toLowerCase() || "available") as Availability,
+          openIssues: d.current_open_issues || 0,
+          capacity: 8,
+        }))
+        setDevelopers(mapped)
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false))
+  }, [])
 
   const available = developers.filter((d) => d.availability === "available").length
   const totalOpen = developers.reduce((sum, d) => sum + d.openIssues, 0)
   const totalCapacity = developers.reduce((sum, d) => sum + d.capacity, 0) || 1
+
+  if (loading) {
+    return <div className="flex h-32 items-center justify-center"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>
+  }
 
   return (
     <div className="flex flex-col gap-6">

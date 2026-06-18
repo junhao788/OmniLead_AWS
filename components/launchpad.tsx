@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/badge"
 import { cn } from "@/lib/utils"
+import { fetchAPI } from "@/lib/api"
 
 type Phase = "idle" | "launching" | "done"
 
@@ -28,20 +29,32 @@ export function Launchpad() {
   const [phase, setPhase] = useState<Phase>("idle")
   const [step, setStep] = useState(0)
 
-  function launch() {
+  async function launch() {
     if (!idea.trim() || phase === "launching") return
     setPhase("launching")
     setStep(0)
+    
+    // Animation loop
     let current = 0
     const timer = setInterval(() => {
-      current += 1
-      if (current >= steps.length) {
-        clearInterval(timer)
-        setPhase("done")
-      } else {
-        setStep(current)
-      }
-    }, 900)
+      current = (current + 1) % steps.length
+      setStep(current)
+    }, 2500)
+
+    try {
+      await fetchAPI("/api/project/zero_to_one", {
+        method: "POST",
+        body: JSON.stringify({ prompt: idea })
+      })
+      clearInterval(timer)
+      setStep(steps.length)
+      setPhase("done")
+    } catch (err) {
+      console.error(err)
+      clearInterval(timer)
+      setPhase("idle")
+      alert("Launch failed. Check console.")
+    }
   }
 
   function reset() {
@@ -144,9 +157,9 @@ export function Launchpad() {
               Bootstrap complete
             </div>
             <div className="flex flex-wrap gap-2">
-              <Badge variant="accent">3 repos created</Badge>
-              <Badge variant="accent">14 tickets written</Badge>
-              <Badge variant="accent">6 assignees</Badge>
+              <Badge variant="accent">Repo scaffolded</Badge>
+              <Badge variant="accent">Tickets written & prioritized</Badge>
+              <Badge variant="accent">Developers assigned</Badge>
             </div>
           </div>
         )}

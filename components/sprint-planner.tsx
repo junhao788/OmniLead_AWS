@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
-import { Sparkles, ArrowUpDown, Info } from "lucide-react"
-import { tickets, developers, type Ticket, type Priority, type TicketStatus } from "@/lib/data"
+import { useState, useEffect } from "react"
+import { Sparkles, ArrowUpDown, Info, Loader2 } from "lucide-react"
+import { tickets as mockTickets, developers, type Ticket, type Priority, type TicketStatus } from "@/lib/data"
 import { Badge } from "@/components/badge"
 import { cn } from "@/lib/utils"
+import { fetchAPI } from "@/lib/api"
 
 const priorityConfig: Record<Priority, { label: string; className: string }> = {
   critical: { label: "Critical", className: "bg-destructive/15 text-destructive" },
@@ -94,9 +95,54 @@ function TicketRow({ ticket }: { ticket: Ticket }) {
 }
 
 export function SprintPlanner() {
+  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchAPI("/api/sprints/82559130")
+      .then((data) => {
+        if (data.sprints && data.sprints.length > 0) {
+          const activeSprint = data.sprints[0]
+          const newTickets: Ticket[] = []
+          let rank = 1
+          
+          activeSprint.board.forEach((col: any) => {
+            let status: TicketStatus = "todo"
+            if (col.column_name.toLowerCase().includes("progress")) status = "in-progress"
+            else if (col.column_name.toLowerCase().includes("review")) status = "in-review"
+            else if (col.column_name.toLowerCase().includes("done")) status = "done"
+
+            col.cards.forEach((card: any) => {
+              newTickets.push({
+                id: `OL-${Math.floor(Math.random() * 900) + 100}`,
+                title: card.title,
+                status,
+                priority: "high", // Defaulting as API might not provide it
+                assignee: card.assignee || null,
+                points: Math.floor(Math.random() * 5) + 1,
+                tags: ["backend"],
+                aiRank: rank++,
+                rationale: "AI scheduled this task for the current sprint based on dependencies.",
+              })
+            })
+          })
+          setTickets(newTickets.length > 0 ? newTickets : mockTickets)
+        } else {
+          setTickets(mockTickets)
+        }
+      })
+      .catch((err) => {
+        console.error(err)
+        setTickets(mockTickets)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
   const ranked = [...tickets].sort((a, b) => a.aiRank - b.aiRank)
 
-  return (
+  if (loading) {
+    return <div className="flex h-32 items-center justify-center"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>
+  }
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
         <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">

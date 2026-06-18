@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Sun, Loader2, GitCommit, GitPullRequest, GitMerge, Sparkles, CheckCircle2 } from "lucide-react"
-import { standupEntries, developers } from "@/lib/data"
+import { standupEntries as mockEntries, developers } from "@/lib/data"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { fetchAPI } from "@/lib/api"
 
 type Phase = "idle" | "generating" | "ready"
 
@@ -14,13 +15,29 @@ function devById(id: string) {
 
 export function DailyStandup() {
   const [phase, setPhase] = useState<Phase>("idle")
+  const [entries, setEntries] = useState(mockEntries)
+
+  useEffect(() => {
+    fetchAPI("/api/standups/82559130/history")
+      .then(data => {
+        if (data.standups && data.standups.length > 0) {
+          try {
+            const parsed = JSON.parse(data.standups[0].report)
+            if (Array.isArray(parsed)) setEntries(parsed)
+          } catch (e) {
+            console.error("Failed to parse standup report:", e)
+          }
+        }
+      })
+      .catch(console.error)
+  }, [])
 
   function generate() {
     setPhase("generating")
     setTimeout(() => setPhase("ready"), 1800)
   }
 
-  const totals = standupEntries.reduce(
+  const totals = entries.reduce(
     (acc, e) => ({
       commits: acc.commits + e.commits,
       reviewed: acc.reviewed + e.prsReviewed,
@@ -74,7 +91,7 @@ export function DailyStandup() {
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card py-16 text-center">
           <Loader2 className="size-7 animate-spin text-primary" />
           <p className="text-sm font-medium text-foreground">Aggregating git activity…</p>
-          <p className="text-sm text-muted-foreground">Summarizing {standupEntries.length} engineers across 3 repos.</p>
+          <p className="text-sm text-muted-foreground">Summarizing {entries.length} engineers across 3 repos.</p>
         </div>
       )}
 
@@ -87,8 +104,8 @@ export function DailyStandup() {
           </div>
 
           <div className="flex flex-col gap-4">
-            {standupEntries.map((entry) => {
-              const dev = devById(entry.devId)
+            {entries.map((entry) => {
+              const dev = devById(entry.devId) || { initials: "?", name: entry.devId, role: "Engineer" }
               return (
                 <div key={entry.devId} className="rounded-xl border border-border bg-card p-5">
                   <div className="flex items-start gap-3">
