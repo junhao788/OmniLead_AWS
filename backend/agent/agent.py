@@ -43,7 +43,7 @@ gitlab_mcp_tools = McpToolset(connection_params=gitlab_params)
 # 2. Initialize the ADK Agent with BOTH MCP tools AND custom read tools
 root_agent = Agent(
     name="project_agent",
-    model="gemini-3.5-flash",
+    model="gemini-2.5-flash",
     instruction="""You are 'Project Agent', an elite AI project manager.
 
 You have TWO sets of tools:

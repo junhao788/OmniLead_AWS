@@ -32,11 +32,13 @@ export function Launchpad({
   const [idea, setIdea] = useState("")
   const [phase, setPhase] = useState<Phase>("idle")
   const [step, setStep] = useState(0)
+  const [launchResult, setLaunchResult] = useState<any>(null)
 
   async function launch() {
     if (!idea.trim() || phase === "launching") return
     setPhase("launching")
     setStep(0)
+    setLaunchResult(null)
     
     try {
       const response = await fetch(`${API_BASE_URL}/api/chat`, {
@@ -87,6 +89,7 @@ export function Launchpad({
       }
       
       if (fullText.includes('"error":')) {
+         console.error("🔥 AGENT CRASH LOG 🔥\n\n", fullText);
          throw new Error("Agent encountered an error. Check logs.")
       }
 
@@ -105,12 +108,7 @@ export function Launchpad({
       setPhase("done")
 
       if (finalJsonData && finalJsonData.zero_to_one) {
-        const { project_id, repo_name } = finalJsonData.zero_to_one
-        if (project_id && onProjectCreated) {
-          setTimeout(() => {
-            onProjectCreated({ id: String(project_id), name: repo_name })
-          }, 1500)
-        }
+        setLaunchResult(finalJsonData.zero_to_one)
       }
     } catch (err) {
       console.error(err)
@@ -123,6 +121,7 @@ export function Launchpad({
     setPhase("idle")
     setIdea("")
     setStep(0)
+    setLaunchResult(null)
   }
 
   return (
@@ -213,16 +212,39 @@ export function Launchpad({
         </ol>
 
         {phase === "done" && (
-          <div className="mt-5 rounded-lg border border-primary/30 bg-primary/5 p-4">
-            <div className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
-              <CheckCircle2 className="size-4 text-primary" />
-              Bootstrap complete
+          <div className="mt-5 rounded-lg border border-primary/30 bg-primary/5 p-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <CheckCircle2 className="size-5 text-primary" />
+              Project Successfully Bootstrapped!
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="accent">Repo scaffolded</Badge>
-              <Badge variant="accent">Tickets written & prioritized</Badge>
-              <Badge variant="accent">Developers assigned</Badge>
-            </div>
+            
+            {launchResult ? (
+              <div className="mb-4 flex flex-col gap-2 text-xs text-muted-foreground">
+                <p><span className="font-medium text-foreground">Repository:</span> {launchResult.repo_name}</p>
+                <p><span className="font-medium text-foreground">Issues Created:</span> {launchResult.issues_created || launchResult.issues?.length}</p>
+                <p><span className="font-medium text-foreground">Team Assigned:</span> {launchResult.team_invited?.join(", ")}</p>
+                {launchResult.blueprint?.pages && (
+                  <p><span className="font-medium text-foreground">Pages Planned:</span> {launchResult.blueprint.pages.length}</p>
+                )}
+              </div>
+            ) : (
+              <div className="mb-4 flex flex-wrap gap-2">
+                <Badge variant="accent">Repo scaffolded</Badge>
+                <Badge variant="accent">Tickets written & prioritized</Badge>
+                <Badge variant="accent">Developers assigned</Badge>
+              </div>
+            )}
+            
+            <Button 
+              className="w-full font-medium" 
+              onClick={() => {
+                if (launchResult?.project_id && onProjectCreated) {
+                  onProjectCreated({ id: String(launchResult.project_id), name: launchResult.repo_name })
+                }
+              }}
+            >
+              Go to Project Dashboard
+            </Button>
           </div>
         )}
       </section>
