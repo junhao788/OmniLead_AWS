@@ -81,7 +81,36 @@ class SprintSaveRequest(BaseModel):
 @app.get("/api/sprints/{project_id}")
 async def get_sprint_history(project_id: str):
     try:
-        return {"sprints": db_get_sprints(project_id)}
+        sprints = db_get_sprints(project_id)
+        if not sprints:
+            # Auto-generate a sprint from GitLab issues
+            from agent.gitlab_api import list_project_issues
+            try:
+                issues = list_project_issues(project_id, state="opened").get("issues", [])
+                if issues:
+                    board_cards = []
+                    for iss in issues:
+                        board_cards.append({
+                            "title": iss.get("title"),
+                            "assignee": iss.get("assignees", [{}])[0].get("username") if iss.get("assignees") else None,
+                            "issue_iid": iss.get("iid"),
+                            "status": "todo"
+                        })
+                    new_sprint = {
+                        "sprint_id": f"sprint-auto",
+                        "created_at": __import__("time").time(),
+                        "board": [
+                            {"column_name": "To Do", "cards": board_cards},
+                            {"column_name": "In Progress", "cards": []},
+                            {"column_name": "In Review", "cards": []},
+                            {"column_name": "Done", "cards": []}
+                        ]
+                    }
+                    sprints = [new_sprint]
+                    db_save_sprints(project_id, sprints)
+            except Exception as e:
+                print(f"Auto-sync issues failed: {e}")
+        return {"sprints": sprints}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -182,7 +211,16 @@ class TeamMemberRequest(BaseModel):
 @app.get("/api/team")
 async def get_team():
     try:
-        return db_get_team()
+        data = db_get_team()
+        try:
+            from agent.gitlab_api import get_global_user_open_issue_count
+            for member in data.get("team", []):
+                username = member.get("username")
+                if username:
+                    member["current_open_issues"] = get_global_user_open_issue_count(username)
+        except Exception as e:
+            print(f"Error fetching issue counts: {e}")
+        return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
