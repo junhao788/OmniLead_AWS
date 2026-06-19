@@ -9,13 +9,14 @@ import {
   CheckCircle2,
   Cpu,
   Sparkles,
+  AlertCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/badge"
 import { cn } from "@/lib/utils"
 import { API_BASE_URL } from "@/lib/api"
 
-type Phase = "idle" | "launching" | "done"
+type Phase = "idle" | "launching" | "done" | "error"
 
 const steps = [
   { icon: GitBranch, label: "Scaffolding repositories" },
@@ -33,12 +34,14 @@ export function Launchpad({
   const [phase, setPhase] = useState<Phase>("idle")
   const [step, setStep] = useState(0)
   const [launchResult, setLaunchResult] = useState<any>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   async function launch() {
     if (!idea.trim() || phase === "launching") return
     setPhase("launching")
     setStep(0)
     setLaunchResult(null)
+    setErrorMsg(null)
     
     try {
       const response = await fetch(`${API_BASE_URL}/api/chat`, {
@@ -110,10 +113,10 @@ export function Launchpad({
       if (finalJsonData && finalJsonData.zero_to_one) {
         setLaunchResult(finalJsonData.zero_to_one)
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
-      setPhase("idle")
-      alert("Launch failed: The connection timed out or the AI Agent crashed.")
+      setPhase("error")
+      setErrorMsg(err.message || "Launch failed: The connection timed out or the AI Agent crashed.")
     }
   }
 
@@ -122,6 +125,7 @@ export function Launchpad({
     setIdea("")
     setStep(0)
     setLaunchResult(null)
+    setErrorMsg(null)
   }
 
   return (
@@ -177,15 +181,18 @@ export function Launchpad({
         <h3 className="mb-1 text-sm font-semibold text-card-foreground">Autonomous pipeline</h3>
         <p className="mb-5 text-xs text-muted-foreground">
           {phase === "idle" && "Waiting for a project idea to begin."}
-          {phase === "launching" && "OmniLead is working in the background…"}
+          {phase === "launching" && "OmniLead is working in the background..."}
           {phase === "done" && "Project bootstrapped. Tickets are live on GitLab."}
+          {phase === "error" && "Project launch failed. See error details below."}
         </p>
 
         <ol className="flex flex-col gap-2.5">
           {steps.map((s, i) => {
             const Icon = s.icon
             const state =
-              phase === "done" || i < step ? "done" : phase === "launching" && i === step ? "active" : "pending"
+              phase === "done" || (phase !== "error" && i < step) ? "done" : 
+              phase === "launching" && i === step ? "active" : 
+              phase === "error" && i === step ? "error" : "pending"
             return (
               <li
                 key={s.label}
@@ -193,6 +200,7 @@ export function Launchpad({
                   "flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors",
                   state === "done" && "border-primary/30 bg-primary/5 text-foreground",
                   state === "active" && "border-primary/40 bg-primary/10 text-foreground",
+                  state === "error" && "border-destructive/40 bg-destructive/10 text-destructive font-medium",
                   state === "pending" && "border-border text-muted-foreground",
                 )}
               >
@@ -201,6 +209,8 @@ export function Launchpad({
                     <CheckCircle2 className="size-4 text-primary" />
                   ) : state === "active" ? (
                     <Loader2 className="size-4 animate-spin text-primary" />
+                  ) : state === "error" ? (
+                    <AlertCircle className="size-4 text-destructive" />
                   ) : (
                     <Icon className="size-4" />
                   )}
@@ -210,6 +220,19 @@ export function Launchpad({
             )
           })}
         </ol>
+
+        {phase === "error" && (
+          <div className="mt-5 rounded-lg border border-destructive/30 bg-destructive/10 p-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-destructive">
+              <AlertCircle className="size-5" />
+              Launch Failed
+            </div>
+            <p className="text-xs text-destructive/80 mb-4 whitespace-pre-wrap font-mono">{errorMsg}</p>
+            <Button variant="outline" className="w-full text-foreground hover:bg-destructive/10 hover:text-destructive" onClick={reset}>
+              Dismiss & Try Again
+            </Button>
+          </div>
+        )}
 
         {phase === "done" && (
           <div className="mt-5 rounded-lg border border-primary/30 bg-primary/5 p-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
