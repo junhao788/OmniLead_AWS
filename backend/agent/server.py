@@ -313,6 +313,8 @@ def _prepare_agent_env():
 
     merged_env = os.environ.copy()
     merged_env["PYTHONIOENCODING"] = "utf-8"
+    merged_env["NODE_OPTIONS"] = "--max-old-space-size=80"
+    merged_env["MALLOC_ARENA_MAX"] = "2"
     if os.path.exists(env_file_path):
         with open(env_file_path, "r", encoding="utf-8") as f:
             for line in f:
