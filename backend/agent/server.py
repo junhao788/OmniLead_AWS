@@ -514,12 +514,13 @@ async def chat(request: ChatRequest):
 
                     # Extract final JSON robustly
                     print(f"--- AGENT SUBPROCESS OUTPUT ---\n{full_output}\n--- END SUBPROCESS OUTPUT ---", flush=True)
-                    if process.returncode != 0:
-                        print(f"AGENT EXITED WITH ERROR CODE: {process.returncode}", flush=True)
-
-                    cleaned_json = clean_and_serialize_json(full_output)
                     yield "\n__FINAL_JSON__\n"
-                    yield cleaned_json
+                    if process.returncode != 0:
+                        import json
+                        yield json.dumps({"error": f"Agent crashed with code {process.returncode}"})
+                    else:
+                        import json
+                        yield json.dumps({"status": "success"})
                 finally:
                     _agent_busy = False
 

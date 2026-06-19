@@ -90,11 +90,6 @@ export function Launchpad({
       if (!reachedEnd) {
         throw new Error("Stream closed prematurely without finishing. It might have timed out.")
       }
-      
-      if (fullText.includes('"error":')) {
-         console.error("🔥 AGENT CRASH LOG 🔥\n\n", fullText);
-         throw new Error("Agent encountered an error. Check logs.")
-      }
 
       let finalJsonData: any = null
       if (reachedEnd) {
@@ -105,6 +100,11 @@ export function Launchpad({
         } catch (e) {
           console.error("Failed to parse final JSON from agent stream:", e)
         }
+      }
+      
+      if (finalJsonData && finalJsonData.error) {
+         console.error("🔥 AGENT CRASH LOG 🔥\n\n", fullText);
+         throw new Error(finalJsonData.error)
       }
       
       setStep(steps.length)
