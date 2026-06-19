@@ -372,8 +372,9 @@ def _prepare_agent_env():
 
     merged_env = os.environ.copy()
     merged_env["PYTHONIOENCODING"] = "utf-8"
-    merged_env["NODE_OPTIONS"] = "--max-old-space-size=80"
-    merged_env["MALLOC_ARENA_MAX"] = "2"
+    merged_env["NODE_OPTIONS"] = "--max-old-space-size=40"
+    merged_env["MALLOC_ARENA_MAX"] = "1"
+    merged_env["PYTHONMALLOC"] = "malloc"
     if os.path.exists(env_file_path):
         with open(env_file_path, "r", encoding="utf-8") as f:
             for line in f:
@@ -480,45 +481,11 @@ async def chat(request: ChatRequest):
     try:
         print(f"Executing Agent with query: {request.message}")
 
-        # Set environment variables for the CURRENT process so that MCP Node.js children inherit them!
-        import os
-        os.environ["NODE_OPTIONS"] = "--max-old-space-size=40"
-        os.environ["MALLOC_ARENA_MAX"] = "2"
+        base_dir, adk_exe, agent_dir, merged_env = _prepare_agent_env()
 
         final_query = request.message
         if request.project_id:
             final_query = f"[TARGET PROJECT ID: {request.project_id}]\n\n{final_query}"
-
-        # Helper to run agent in-process
-        import asyncio
-        import sys
-        import io
-        import contextlib
-        import traceback
-
-        async def _run_agent_in_process():
-            loop = asyncio.get_running_loop()
-            q = asyncio.Queue()
-
-            class StreamInterceptor:
-                def write(self, s):
-                    loop.call_soon_threadsafe(q.put_nowait, s)
-                def flush(self):
-                    pass
-
-            def worker():
-                interceptor = StreamInterceptor()
-                with contextlib.redirect_stdout(interceptor), contextlib.redirect_stderr(interceptor):
-                    try:
-                        from agent.agent import root_agent
-                        root_agent.run(final_query)
-                    except Exception as e:
-                        loop.call_soon_threadsafe(q.put_nowait, f"\n\n\"error\": \"{str(e)}\"\n{traceback.format_exc()}\n")
-                    finally:
-                        loop.call_soon_threadsafe(q.put_nowait, None)
-
-            asyncio.create_task(asyncio.to_thread(worker))
-            return q
 
         # ── STREAMING MODE (Zero-to-One only) ──────────────────────────
         if request.stream_output:
@@ -527,17 +494,28 @@ async def chat(request: ChatRequest):
             async def stream_agent_output():
                 global _agent_busy
                 try:
-                    q = await _run_agent_in_process()
+                    process = await asyncio.create_subprocess_exec(
+                        adk_exe, "run", agent_dir, final_query,
+                        env=merged_env,
+                        cwd=base_dir,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.STDOUT,
+                    )
+
                     full_output = ""
                     while True:
-                        chunk = await q.get()
-                        if chunk is None:
+                        line_bytes = await process.stdout.readline()
+                        if not line_bytes and process.returncode is not None:
                             break
-                        full_output += chunk
-                        yield chunk
+                        if line_bytes:
+                            line_str = line_bytes.decode('utf-8', errors='replace')
+                            full_output += line_str
+                            yield line_str
 
                     # Extract final JSON robustly
                     print(f"--- AGENT SUBPROCESS OUTPUT ---\n{full_output}\n--- END SUBPROCESS OUTPUT ---", flush=True)
+                    if process.returncode != 0:
+                        print(f"AGENT EXITED WITH ERROR CODE: {process.returncode}", flush=True)
 
                     cleaned_json = clean_and_serialize_json(full_output)
                     yield "\n__FINAL_JSON__\n"
@@ -553,17 +531,30 @@ async def chat(request: ChatRequest):
         async def stream_spaces_then_json():
             global _agent_busy
             try:
-                q = await _run_agent_in_process()
+                process = await asyncio.create_subprocess_exec(
+                    adk_exe, "run", agent_dir, final_query,
+                    env=merged_env,
+                    cwd=base_dir,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.STDOUT,
+                )
+
                 full_output = ""
                 while True:
                     try:
-                        chunk = await asyncio.wait_for(q.get(), timeout=2.0)
-                        if chunk is None:
+                        line_bytes = await asyncio.wait_for(process.stdout.readline(), timeout=2.0)
+                        
+                        if not line_bytes and process.returncode is not None:
                             break
-                        full_output += chunk
-                        yield " "
+                            
+                        if line_bytes:
+                            full_output += line_bytes.decode('utf-8', errors='replace')
+                            yield " "
                     except asyncio.TimeoutError:
                         yield " "
+                        if process.returncode is not None:
+                            break
+                        continue
 
                 # Process finished. Extract final JSON robustly
                 cleaned_json = clean_and_serialize_json(full_output)
