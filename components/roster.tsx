@@ -39,7 +39,7 @@ function WorkloadBar({ open, capacity }: { open: number; capacity: number }) {
   )
 }
 
-function DeveloperCard({ dev, onDelete, onEdit }: { dev: Developer; onDelete?: (id: string) => void; onEdit?: (dev: Developer) => void }) {
+function DeveloperCard({ dev, onDelete, onEdit, onViewWorkload }: { dev: Developer; onDelete?: (id: string) => void; onEdit?: (dev: Developer) => void; onViewWorkload?: (dev: Developer) => void }) {
   const status = availabilityConfig[dev.availability]
   const isOwner = dev.id === "owner_admin"
   
@@ -94,9 +94,13 @@ function DeveloperCard({ dev, onDelete, onEdit }: { dev: Developer; onDelete?: (
           {status.label}
         </span>
         {!isOwner && (
-          <div className="flex flex-col items-end gap-1 w-1/2">
+          <div 
+            className="flex flex-col items-end gap-1 w-1/2 cursor-pointer hover:bg-secondary/40 p-1.5 -m-1.5 rounded-md transition-colors"
+            onClick={() => onViewWorkload?.(dev)}
+            title="Click to view assigned tasks"
+          >
             <div className="flex items-center justify-between text-[10px] w-full">
-              <span className="text-muted-foreground">Workload</span>
+              <span className="text-muted-foreground">Workload <span className="underline ml-0.5">View</span></span>
               <span className="font-medium text-card-foreground">
                 {dev.openIssues} / {dev.capacity} issues
               </span>
@@ -391,6 +395,9 @@ export function Roster() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingDev, setEditingDev] = useState<Developer | null>(null)
   const [loading, setLoading] = useState(true)
+  const [viewingWorkloadDev, setViewingWorkloadDev] = useState<Developer | null>(null)
+  const [workloadIssues, setWorkloadIssues] = useState<any[]>([])
+  const [loadingWorkload, setLoadingWorkload] = useState(false)
 
   const ownerDev: Developer = {
     id: "owner_admin",
@@ -408,29 +415,29 @@ export function Roster() {
       .then((data) => {
         const mapped = data.team.map((d: any) => ({
           id: d.username || d.gitlabUsername || `d-${Date.now()}`,
-          name: d.name || d.fullname,
-          initials: initialsFromName(d.name || d.fullname || "Dev"),
-          role: d.role || "Developer",
+          name: d.name,
+          initials: initialsFromName(d.name),
+          role: d.role,
           skills: d.skills || [],
-          availability: (d.availability?.toLowerCase() || "available") as Availability,
-          openIssues: d.current_open_issues || d.opentask || 0,
+          availability: "available",
+          openIssues: d.current_open_issues || 0,
           capacity: 8,
         }))
         setDevelopers([ownerDev, ...mapped])
       })
-      .catch((err) => console.error(err))
+      .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
 
   async function handleDelete(id: string) {
-    if (id === "owner_admin") return
-    if (!confirm("Are you sure you want to remove this member?")) return
-    try {
-      await fetchAPI(`/api/team/${id}`, { method: "DELETE" })
-      setDevelopers((prev) => prev.filter((d) => d.id !== id))
-    } catch (err) {
-      console.error(err)
-      alert("Failed to delete member")
+    if (confirm("Are you sure you want to remove this member?")) {
+      try {
+        await fetchAPI(`/api/team/${id}`, { method: "DELETE" })
+        setDevelopers((prev) => prev.filter((d) => d.id !== id))
+      } catch (err) {
+        console.error(err)
+        alert("Failed to delete member")
+      }
     }
   }
 
@@ -438,9 +445,23 @@ export function Roster() {
     setEditingDev(dev)
   }
 
+  async function handleViewWorkload(dev: Developer) {
+    setViewingWorkloadDev(dev)
+    setLoadingWorkload(true)
+    setWorkloadIssues([])
+    try {
+      const data = await fetchAPI(`/api/team/${dev.id}/issues`)
+      setWorkloadIssues(data.issues || [])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingWorkload(false)
+    }
+  }
+
   const available = developers.filter((d) => d.availability === "available").length
   const totalOpen = developers.reduce((sum, d) => sum + d.openIssues, 0)
-  const totalCapacity = developers.reduce((sum, d) => sum + d.capacity, 0) || 1
+  const totalCapacity = developers.reduce((sum, d) => sum + d.capacity, 0)
 
   if (loading) {
     return <div className="flex h-32 items-center justify-center"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>
@@ -467,7 +488,7 @@ export function Roster() {
 
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
         {developers.map((dev) => (
-          <DeveloperCard key={dev.id} dev={dev} onDelete={handleDelete} onEdit={handleEdit} />
+          <DeveloperCard key={dev.id} dev={dev} onDelete={handleDelete} onEdit={handleEdit} onViewWorkload={handleViewWorkload} />
         ))}
       </div>
 
@@ -481,6 +502,54 @@ export function Roster() {
           onAdd={(dev) => setDevelopers((prev) => [...prev, dev])}
           onUpdate={(dev) => setDevelopers((prev) => prev.map((d) => (d.id === editingDev?.id ? dev : d)))}
         />
+      )}
+
+      {viewingWorkloadDev && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-2xl">
+            <div className="mb-6 flex items-start justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">Workload Details</h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Open issues assigned to {viewingWorkloadDev.name}
+                </p>
+              </div>
+              <button
+                onClick={() => setViewingWorkloadDev(null)}
+                className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary transition-colors"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <div className="max-h-80 overflow-y-auto pr-2">
+              {loadingWorkload ? (
+                <div className="flex h-32 items-center justify-center">
+                  <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : workloadIssues.length > 0 ? (
+                <ul className="flex flex-col gap-2">
+                  {workloadIssues.map((issue, idx) => (
+                    <li key={idx} className="rounded-lg border border-border bg-secondary/30 p-3 flex flex-col gap-1.5 hover:bg-secondary/60 transition-colors">
+                      <a href={issue.web_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-foreground hover:text-primary hover:underline">
+                        {issue.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <p className="text-sm font-medium text-card-foreground">No open issues found</p>
+                  <p className="text-xs text-muted-foreground mt-1">This member has no active assigned issues on GitLab.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => setViewingWorkloadDev(null)}>Close</Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

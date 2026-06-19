@@ -224,6 +224,27 @@ async def get_team():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/team/{username}/issues")
+async def get_team_member_issues(username: str):
+    try:
+        from agent.gitlab_api import GITLAB_API_URL, HEADERS
+        import requests
+        url = f"{GITLAB_API_URL}/issues"
+        params = {"state": "opened", "assignee_username": username, "per_page": 20}
+        resp = requests.get(url, headers=HEADERS, params=params)
+        if resp.status_code == 200:
+            issues = []
+            for i in resp.json():
+                issues.append({
+                    "title": i.get("title"),
+                    "web_url": i.get("web_url"),
+                    "project_id": i.get("project_id"),
+                })
+            return {"issues": issues}
+        return {"issues": []}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/team")
 async def add_team_member(member: TeamMemberRequest):
     try:
