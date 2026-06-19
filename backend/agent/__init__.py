@@ -10,8 +10,8 @@ from mcp.client.stdio import StdioServerParameters
 
 # 1. Configure GitLab MCP connection
 gitlab_params = StdioServerParameters(
-    command="npx",
-    args=["-y", "@modelcontextprotocol/server-gitlab"],
+    command="node",
+    args=["node_modules/@modelcontextprotocol/server-gitlab/dist/index.js"],
     env={
         "GITLAB_PERSONAL_ACCESS_TOKEN": os.environ.get("GITLAB_PERSONAL_ACCESS_TOKEN", ""),
         "GITLAB_API_URL": os.environ.get("GITLAB_API_URL", "https://gitlab.com/api/v4"),
