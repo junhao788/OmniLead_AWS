@@ -25,7 +25,7 @@ gitlab_tools = McpToolset(connection_params=gitlab_params)
 # 2. Initialize the ADK Agent (exported as `agent` or `root_agent`)
 agent = Agent(
     name="project_agent",
-    model="gemini-1.5-flash", # Use the requested model
+    model="gemini-2.5-flash-lite", # Use the requested model
     instruction="""You are an intelligent project management agent.
     You have access to a GitLab instance.
     Your goal is to help users understand their project status, manage issues, and generate reports.
