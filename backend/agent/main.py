@@ -29,7 +29,7 @@ def create_agent():
     # 2. Initialize the ADK Agent
     project_agent = Agent(
         name="project_agent",
-        model="gemini-3.5-flash", # Use gemini-3.5-flash
+        model="gemini-3.1-flash-lite", # Use gemini-3.1-flash-lite
         instruction="""You are an intelligent project management agent.
         You have access to a GitLab instance.
         Your goal is to help users understand their project status, manage issues, and generate reports.
