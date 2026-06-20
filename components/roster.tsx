@@ -506,7 +506,7 @@ export function Roster() {
 
       {viewingWorkloadDev && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-2xl">
+          <div className="w-full max-w-3xl rounded-xl border border-border bg-card p-6 shadow-2xl">
             <div className="mb-6 flex items-start justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">Workload Details</h2>
@@ -522,21 +522,39 @@ export function Roster() {
               </button>
             </div>
 
-            <div className="max-h-80 overflow-y-auto pr-2">
+            <div className="max-h-[60vh] overflow-y-auto pr-2">
               {loadingWorkload ? (
                 <div className="flex h-32 items-center justify-center">
                   <Loader2 className="size-5 animate-spin text-muted-foreground" />
                 </div>
               ) : workloadIssues.length > 0 ? (
-                <ul className="flex flex-col gap-2">
-                  {workloadIssues.map((issue, idx) => (
-                    <li key={idx} className="rounded-lg border border-border bg-secondary/30 p-3 flex flex-col gap-1.5 hover:bg-secondary/60 transition-colors">
-                      <a href={issue.web_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-foreground hover:text-primary hover:underline">
-                        {issue.title}
-                      </a>
-                    </li>
+                <div className="flex flex-col gap-6">
+                  {Object.entries(
+                    workloadIssues.reduce((acc, issue) => {
+                      const proj = issue.project_name || "Unknown Project"
+                      if (!acc[proj]) acc[proj] = []
+                      acc[proj].push(issue)
+                      return acc
+                    }, {} as Record<string, any[]>)
+                  ).map(([projectName, issues]: [string, any]) => (
+                    <div key={projectName} className="flex flex-col gap-3">
+                      <h3 className="text-sm font-semibold text-primary flex items-center gap-2">
+                        <span className="size-2 rounded-full bg-primary/80"></span>
+                        {projectName}
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 rounded-full">{issues.length}</Badge>
+                      </h3>
+                      <ul className="flex flex-col gap-2">
+                        {issues.map((issue: any, idx: number) => (
+                          <li key={idx} className="rounded-lg border border-border bg-secondary/30 p-3 flex flex-col gap-1.5 hover:bg-secondary/60 transition-colors">
+                            <a href={issue.web_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-foreground hover:text-primary hover:underline">
+                              {issue.title}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-10 text-center">
                   <p className="text-sm font-medium text-card-foreground">No open issues found</p>

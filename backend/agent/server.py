@@ -262,10 +262,17 @@ async def get_team_member_issues(username: str):
         if resp.status_code == 200:
             issues = []
             for i in resp.json():
+                ref_full = i.get("references", {}).get("full", "")
+                project_name = "Unknown Project"
+                if ref_full and "#" in ref_full:
+                    path = ref_full.split("#")[0]
+                    project_name = path.split("/")[-1]
+                    
                 issues.append({
                     "title": i.get("title"),
                     "web_url": i.get("web_url"),
                     "project_id": i.get("project_id"),
+                    "project_name": project_name
                 })
             return {"issues": issues}
         return {"issues": []}
