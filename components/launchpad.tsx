@@ -259,13 +259,29 @@ export function Launchpad({
             )}
             
             <Button 
-              className="w-full font-medium" 
-              onClick={() => {
-                if (launchResult?.project_id && onProjectCreated) {
-                  onProjectCreated({ id: String(launchResult.project_id), name: launchResult.repo_name })
-                }
-              }}
-            >
+                className="w-full font-medium" 
+                onClick={async () => {
+                  if (onProjectCreated) {
+                    try {
+                      // Fetch the real project ID that was just created on GitLab
+                      const data = await fetchAPI("/api/projects")
+                      if (data.projects && data.projects.length > 0) {
+                        // Assuming the first one is the newest or the one they want
+                        const latest = data.projects[0]
+                        onProjectCreated({ id: String(latest.id), name: latest.name })
+                        return
+                      }
+                    } catch (err) {
+                      console.error("Failed to fetch latest project ID", err)
+                    }
+                    // Fallback if fetch fails
+                    onProjectCreated({ 
+                      id: launchResult?.project_id ? String(launchResult.project_id) : `new-project-${Date.now()}`, 
+                      name: launchResult?.repo_name || "New Project" 
+                    })
+                  }
+                }}
+              >
               Go to Project Dashboard
             </Button>
           </div>
