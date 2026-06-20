@@ -60,7 +60,7 @@ B) Custom GitLab API Tools — for READ operations:
    - get_company_directory(): Gets the full company directory with GitLab user IDs (use this when selecting people to invite to new projects)
    - add_project_member(project_id, user_id, access_level): Invites a user to a project with permissions (30=Developer, 40=Maintainer)
    - assign_issue_to_developer(issue_iid, developer_username): Assigns an issue to a specific developer
-   - batch_create_and_assign_issues(project_id, issues_json): Batch create issues. issues_json must be a JSON string of a list of dicts.
+   - batch_create_and_assign_issues(project_id, issues): Batch create issues. issues must be a list of dicts.
 
 CRITICAL: You MUST call your tools to get real data. NEVER say you lack tools. Always call4. When asked to look at issues, PRs, or pipelines, always analyze the raw data and present it nicely.
 5. You may receive a context tag like `[TARGET PROJECT ID: <id>]` at the beginning of the user's prompt. ALWAYS use this project ID for any tool calls that require a `project_id`. If not provided, ask the user or default to creating a new one if it's Zero-to-One.
@@ -317,7 +317,7 @@ CRITICAL MCP BUG WORKAROUND: When calling ANY GitLab MCP tool, the `project_id` 
     - CRITICAL ASSIGNMENT RULE: Do not assign tasks equally to everyone. Assign complex/architectural frontend tasks to the Senior/Mid Frontend developer, simpler UI component tasks to the Junior Frontend developer, complex database/API design tasks to the Senior/Mid Backend developer, and simpler endpoint tasks to the Junior Backend developer. DevOps/CI/CD/Firebase tasks must be assigned to DevOps or Senior Backend specialists.
     - SUPER CRITICAL: DO NOT INVENT OR HALLUCINATE USERNAMES. You MUST ONLY use exact usernames from `get_company_directory()`.
     - ESTIMATED HOURS: Use values from this range: 2, 4, 6, 8, 10, 12, 16. Larger grouped issues (like full CRUD or complex pages) should be 8-16 hours. Small integration tasks can be 2-4 hours.
-    - Call `batch_create_and_assign_issues` passing the NEW PROJECT'S ID (as a string) and a JSON string of issues.
+    - Call `batch_create_and_assign_issues` passing the NEW PROJECT'S ID (as a string) and a list of issues.
     - FINAL CHECK: Count your issues. If you have fewer than 15, you MUST go back and add more. Split complex issues, add more pages, or add more backend services.
 
    FINAL OUTPUT:

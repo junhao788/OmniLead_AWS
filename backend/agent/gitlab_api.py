@@ -297,22 +297,16 @@ def assign_issue_to_developer(issue_iid: int, developer_username: str, project_i
     }
 
 
-def batch_create_and_assign_issues(project_id: str, issues_json: str) -> dict:
+def batch_create_and_assign_issues(project_id: str, issues: list) -> dict:
     """
     Batch create multiple issues and immediately assign them to developers.
     
     Args:
         project_id: The ID of the GitLab project.
-        issues_json: A JSON string representing a list of dicts. Each dict MUST contain 'title', 'description', and 'assignee_username' (optional). Each dict may also contain 'estimated_hours' (number) for time tracking.
+        issues: A list of dicts. Each dict MUST contain 'title', 'description', and 'assignee_username' (optional). Each dict may also contain 'estimated_hours' (number) for time tracking.
         
     This drastically reduces API requests by performing the loop in Python.
     """
-    import json
-    try:
-        issues = json.loads(issues_json)
-    except Exception as e:
-        return {"error": f"Failed to parse issues_json: {str(e)}"}
-        
     results = []
     created_count = 0
     assigned_count = 0
@@ -323,7 +317,7 @@ def batch_create_and_assign_issues(project_id: str, issues_json: str) -> dict:
     for issue_data in issues:
         title = issue_data.get("title")
         description = issue_data.get("description", "")
-        assignee_username = issue_data.get("assignee_username")
+        assignee_username = issue_data.get("assignee_username") or issue_data.get("assigned_to")
         
         # 1. Create the issue
         url = f"{GITLAB_API_URL}/projects/{project_id}/issues"
