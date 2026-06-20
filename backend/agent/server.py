@@ -505,12 +505,13 @@ async def chat(request: ChatRequest):
                     full_output = ""
                     while True:
                         line_bytes = await process.stdout.readline()
-                        if not line_bytes and process.returncode is not None:
+                        if not line_bytes:
                             break
-                        if line_bytes:
-                            line_str = line_bytes.decode('utf-8', errors='replace')
-                            full_output += line_str
-                            yield line_str
+                        line_str = line_bytes.decode('utf-8', errors='replace')
+                        full_output += line_str
+                        yield line_str
+
+                    await process.wait()
 
                     # Extract final JSON robustly
                     print(f"--- AGENT SUBPROCESS OUTPUT ---\n{full_output}\n--- END SUBPROCESS OUTPUT ---", flush=True)
