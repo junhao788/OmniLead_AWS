@@ -33,8 +33,8 @@ from .gitlab_api import (
 merged_env = os.environ.copy()
 
 gitlab_params = StdioServerParameters(
-    command="node",
-    args=["node_modules/@modelcontextprotocol/server-gitlab/dist/index.js"],
+    command="npx",
+    args=["-y", "@modelcontextprotocol/server-gitlab"],
     env=merged_env
 )
 
