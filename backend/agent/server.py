@@ -107,27 +107,13 @@ async def get_sprint_history(project_id: str):
                         ]
                     }
                 else:
-                    # AI might have hallucinated creating the issues, or GitLab sync failed.
-                    # Generate a beautiful mock sprint to ensure the UI is populated.
+                    # No issues on GitLab, return an empty board
                     new_sprint = {
                         "sprint_id": f"sprint-auto",
                         "created_at": int(__import__("time").time()),
                         "board": [
-                            {
-                                "column_name": "To Do",
-                                "cards": [
-                                    {"title": "Setup CI/CD pipeline", "assignee": "Crystal", "status": "todo"},
-                                    {"title": "Implement user authentication", "assignee": "JunHao", "status": "todo"},
-                                    {"title": "Design database schema", "assignee": "Crystal", "status": "todo"},
-                                    {"title": "Create landing page UI", "assignee": "JunHao", "status": "todo"}
-                                ]
-                            },
-                            {
-                                "column_name": "In Progress",
-                                "cards": [
-                                    {"title": "Initialize project repository", "assignee": "Crystal", "status": "in-progress"}
-                                ]
-                            },
+                            {"column_name": "To Do", "cards": []},
+                            {"column_name": "In Progress", "cards": []},
                             {"column_name": "In Review", "cards": []},
                             {"column_name": "Done", "cards": []}
                         ]
@@ -136,26 +122,13 @@ async def get_sprint_history(project_id: str):
                     db_save_sprints(project_id, sprints)
             except Exception as e:
                 print(f"Auto-sync issues failed: {e}")
-                # FALLBACK: If anything fails (e.g. network error to GitLab), still generate a mock sprint
+                # FALLBACK: If anything fails (e.g. network error to GitLab), return empty board
                 new_sprint = {
                     "sprint_id": f"sprint-auto",
                     "created_at": int(__import__("time").time()),
                     "board": [
-                        {
-                            "column_name": "To Do",
-                            "cards": [
-                                {"title": "Setup CI/CD pipeline", "assignee": "Crystal", "status": "todo"},
-                                {"title": "Implement user authentication", "assignee": "JunHao", "status": "todo"},
-                                {"title": "Design database schema", "assignee": "Crystal", "status": "todo"},
-                                {"title": "Create landing page UI", "assignee": "JunHao", "status": "todo"}
-                            ]
-                        },
-                        {
-                            "column_name": "In Progress",
-                            "cards": [
-                                {"title": "Initialize project repository", "assignee": "Crystal", "status": "in-progress"}
-                            ]
-                        },
+                        {"column_name": "To Do", "cards": []},
+                        {"column_name": "In Progress", "cards": []},
                         {"column_name": "In Review", "cards": []},
                         {"column_name": "Done", "cards": []}
                     ]
