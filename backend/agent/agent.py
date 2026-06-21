@@ -323,7 +323,7 @@ CRITICAL MCP BUG WORKAROUND: When calling ANY GitLab MCP tool, the `project_id` 
    - IMPORTANT: The "issues" array MUST list EVERY SINGLE issue you created (minimum 15). Do NOT truncate.
    {
      "zero_to_one": {
-       "project_id": "THE_ACTUAL_SAVED_PROJECT_ID",
+       "project_id": "<the exact numeric project ID returned by create_repository>",
        "repo_name": "the-repo-name",
        "repo_url": "https://gitlab.com/...",
        "team_invited": ["alice.chen", "bob.zhang"],

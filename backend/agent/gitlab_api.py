@@ -297,25 +297,56 @@ def assign_issue_to_developer(issue_iid: int, developer_username: str, project_i
     }
 
 
-def batch_create_and_assign_issues(project_id: str, issues: list) -> dict:
+def batch_create_and_assign_issues(project_id: str, issues: list = None, issues_json: str = None) -> dict:
     """
     Batch create multiple issues and immediately assign them to developers.
     
     Args:
         project_id: The ID of the GitLab project.
         issues: A list of dicts. Each dict MUST contain 'title', 'description', and 'assignee_username' (optional). Each dict may also contain 'estimated_hours' (number) for time tracking.
+        issues_json: A JSON string of the list of dicts (fallback).
         
     This drastically reduces API requests by performing the loop in Python.
     """
+    import json
+    import requests
     results = []
     created_count = 0
     assigned_count = 0
+    
+    # Robust input handling
+    if issues is None and issues_json is not None:
+        try:
+            issues = json.loads(issues_json)
+        except Exception as e:
+            return {"error": f"Failed to parse issues_json: {e}"}
+            
+    if isinstance(issues, str):
+        try:
+            issues = json.loads(issues)
+        except Exception as e:
+            return {"error": f"Failed to parse issues string: {e}"}
+            
+    if not isinstance(issues, list):
+        return {"error": f"Expected issues to be a list, got {type(issues)}"}
     
     # First, preload all user IDs to minimize requests
     user_cache = {}
     
     for issue_data in issues:
+        if isinstance(issue_data, str):
+            try:
+                issue_data = json.loads(issue_data)
+            except:
+                continue
+                
+        if not isinstance(issue_data, dict):
+            continue
+            
         title = issue_data.get("title")
+        if not title:
+            continue
+            
         description = issue_data.get("description", "")
         assignee_username = issue_data.get("assignee_username") or issue_data.get("assigned_to")
         
