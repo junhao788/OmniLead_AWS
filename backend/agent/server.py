@@ -541,8 +541,8 @@ async def chat(request: ChatRequest):
                                 break
                                 
                             line_str = line_bytes.decode('utf-8', errors='replace')
-                                full_output += line_str
-                                yield line_str
+                            full_output += line_str
+                            yield line_str
                         except asyncio.TimeoutError:
                             # Keep connection alive for Render's 100s proxy timeout
                             yield " "
