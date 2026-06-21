@@ -567,7 +567,15 @@ async def chat(request: ChatRequest):
                 finally:
                     _agent_busy = False
 
-            return StreamingResponse(stream_agent_output(), media_type="text/plain")
+            return StreamingResponse(
+                stream_agent_output(), 
+                media_type="text/plain",
+                headers={
+                    "X-Accel-Buffering": "no",
+                    "Cache-Control": "no-cache",
+                    "Connection": "keep-alive"
+                }
+            )
 
         # ── NORMAL MODE (all other features) ───────────────────────────
         from fastapi.responses import StreamingResponse
@@ -617,7 +625,15 @@ async def chat(request: ChatRequest):
             finally:
                 _agent_busy = False
 
-        return StreamingResponse(stream_spaces_then_json(), media_type="application/json")
+        return StreamingResponse(
+            stream_spaces_then_json(), 
+            media_type="application/json",
+            headers={
+                "X-Accel-Buffering": "no",
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive"
+            }
+        )
 
     except Exception as e:
         import traceback
