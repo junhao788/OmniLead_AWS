@@ -535,12 +535,23 @@ async def chat(request: ChatRequest):
 
                     full_output = ""
                     while True:
-                        line_bytes = await process.stdout.readline()
-                        if not line_bytes:
-                            break
-                        line_str = line_bytes.decode('utf-8', errors='replace')
-                        full_output += line_str
-                        yield line_str
+                        try:
+                            line_bytes = await asyncio.wait_for(process.stdout.readline(), timeout=5.0)
+                            if not line_bytes and process.returncode is not None:
+                                break
+                            if not line_bytes and process.returncode is None:
+                                # Stream might be momentarily empty but process is running
+                                pass
+                            elif line_bytes:
+                                line_str = line_bytes.decode('utf-8', errors='replace')
+                                full_output += line_str
+                                yield line_str
+                        except asyncio.TimeoutError:
+                            # Keep connection alive for Render's 100s proxy timeout
+                            yield " "
+                            if process.returncode is not None:
+                                break
+                            continue
 
                     await process.wait()
 
