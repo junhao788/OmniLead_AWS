@@ -316,6 +316,7 @@ CRITICAL MCP BUG WORKAROUND: When calling ANY GitLab MCP tool, the `project_id` 
     - SUPER CRITICAL: DO NOT INVENT OR HALLUCINATE USERNAMES. You MUST ONLY use exact usernames from `get_company_directory()`.
     - ESTIMATED HOURS: Use values from this range: 2, 4, 6, 8, 10, 12, 16. Larger grouped issues (like full CRUD or complex pages) should be 8-16 hours. Small integration tasks can be 2-4 hours.
     - Call `batch_create_and_assign_issues` passing the NEW PROJECT'S ID (as a string) and a list of issues.
+    - FATAL ERROR CHECK: If `batch_create_and_assign_issues` returns an error (e.g., due to markdown formatting or wrong project_id), YOU MUST NOT PROCEED. You MUST correct your tool arguments and call the tool AGAIN until it returns "status": "success".
     - FINAL CHECK: Count your issues. If you have fewer than 15, you MUST go back and add more. Split complex issues, add more pages, or add more backend services.
 
    FINAL OUTPUT:

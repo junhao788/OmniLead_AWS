@@ -319,7 +319,10 @@ def batch_create_and_assign_issues(project_id: str, issues: list) -> dict:
             
     if isinstance(issues, str):
         try:
-            issues = json.loads(issues)
+            import re
+            cleaned_issues = re.sub(r"^```(?:json)?", "", issues).strip()
+            cleaned_issues = re.sub(r"```$", "", cleaned_issues).strip()
+            issues = json.loads(cleaned_issues)
         except Exception as e:
             return {"error": f"Failed to parse issues string: {e}"}
             
@@ -333,15 +336,15 @@ def batch_create_and_assign_issues(project_id: str, issues: list) -> dict:
         if isinstance(issue_data, str):
             try:
                 issue_data = json.loads(issue_data)
-            except:
-                continue
+            except Exception as e:
+                return {"error": f"FATAL: One of the issues in the list is a string but not valid JSON. Error: {e}. Please ensure the issues argument is a proper list of dictionaries."}
                 
         if not isinstance(issue_data, dict):
-            continue
+            return {"error": f"FATAL: One of the issues is of type {type(issue_data)}, expected dict. Please ensure the issues argument is a proper list of dictionaries."}
             
         title = issue_data.get("title")
         if not title:
-            continue
+            return {"error": "FATAL: One of the issues is missing the required 'title' field."}
             
         description = issue_data.get("description", "")
         assignee_username = issue_data.get("assignee_username") or issue_data.get("assigned_to")
@@ -400,6 +403,11 @@ def batch_create_and_assign_issues(project_id: str, issues: list) -> dict:
             "status": "created_and_assigned" if assigned_to else "created"
         })
         
+    if created_count == 0:
+        return {
+            "error": "FATAL: No issues were created. Did you pass an empty list? You must pass at least 15 valid issues in the 'issues' array."
+        }
+
     return {
         "status": "success",
         "total_requested": len(issues),
