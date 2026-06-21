@@ -358,8 +358,9 @@ def batch_create_and_assign_issues(project_id: str, issues: list = None, issues_
         })
         
         if create_resp.status_code != 201:
-            results.append({"title": title, "status": "failed_to_create", "error": create_resp.text})
-            continue
+            return {
+                "error": f"FATAL: Failed to create issue '{title}'. GitLab API returned {create_resp.status_code}: {create_resp.text}. Double check that project_id is the exact NUMERIC ID returned by create_repository, NOT the string name."
+            }
             
         created_issue = create_resp.json()
         issue_iid = created_issue.get("iid")
