@@ -537,13 +537,10 @@ async def chat(request: ChatRequest):
                     while True:
                         try:
                             line_bytes = await asyncio.wait_for(process.stdout.readline(), timeout=5.0)
-                            if not line_bytes and process.returncode is not None:
+                            if not line_bytes:
                                 break
-                            if not line_bytes and process.returncode is None:
-                                # Stream might be momentarily empty but process is running
-                                pass
-                            elif line_bytes:
-                                line_str = line_bytes.decode('utf-8', errors='replace')
+                                
+                            line_str = line_bytes.decode('utf-8', errors='replace')
                                 full_output += line_str
                                 yield line_str
                         except asyncio.TimeoutError:
@@ -596,12 +593,12 @@ async def chat(request: ChatRequest):
                     try:
                         line_bytes = await asyncio.wait_for(process.stdout.readline(), timeout=2.0)
                         
-                        if not line_bytes and process.returncode is not None:
+                        if not line_bytes:
                             break
                             
-                        if line_bytes:
-                            full_output += line_bytes.decode('utf-8', errors='replace')
-                            yield " "
+                        line_str = line_bytes.decode('utf-8', errors='replace')
+                        full_output += line_str
+                        yield " "
                     except asyncio.TimeoutError:
                         yield " "
                         if process.returncode is not None:
@@ -621,7 +618,7 @@ async def chat(request: ChatRequest):
                 if is_parse_error:
                     yield json.dumps({"error": f"Agent returned no valid JSON. Raw output length: {len(full_output)}"})
                 else:
-                    yield json.dumps({"response": cleaned_json})
+                    yield cleaned_json
             finally:
                 _agent_busy = False
 
