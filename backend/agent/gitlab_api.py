@@ -297,14 +297,13 @@ def assign_issue_to_developer(issue_iid: int, developer_username: str, project_i
     }
 
 
-def batch_create_and_assign_issues(project_id: str, issues: list = None, issues_json: str = None) -> dict:
+def batch_create_and_assign_issues(project_id: str, issues: list) -> dict:
     """
     Batch create multiple issues and immediately assign them to developers.
     
     Args:
         project_id: The ID of the GitLab project.
         issues: A list of dicts. Each dict MUST contain 'title', 'description', and 'assignee_username' (optional). Each dict may also contain 'estimated_hours' (number) for time tracking.
-        issues_json: A JSON string of the list of dicts (fallback).
         
     This drastically reduces API requests by performing the loop in Python.
     """
@@ -315,11 +314,8 @@ def batch_create_and_assign_issues(project_id: str, issues: list = None, issues_
     assigned_count = 0
     
     # Robust input handling
-    if issues is None and issues_json is not None:
-        try:
-            issues = json.loads(issues_json)
-        except Exception as e:
-            return {"error": f"Failed to parse issues_json: {e}"}
+    if issues is None:
+        return {"error": "issues argument cannot be null"}
             
     if isinstance(issues, str):
         try:
