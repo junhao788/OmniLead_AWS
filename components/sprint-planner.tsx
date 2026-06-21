@@ -132,14 +132,14 @@ export function SprintPlanner({ projectId }: { projectId?: string }) {
               })
             })
           })
-          setTickets(newTickets.length > 0 ? newTickets : mockTickets)
+          setTickets(newTickets)
         } else {
           setTickets([])
         }
       })
       .catch((err) => {
         console.error(err)
-        setTickets(mockTickets)
+        setTickets([])
       })
       .finally(() => setLoading(false))
   }, [projectId])
