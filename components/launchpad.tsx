@@ -10,6 +10,7 @@ import {
   Cpu,
   Sparkles,
   AlertCircle,
+  BookOpen,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/badge"
@@ -22,6 +23,7 @@ const steps = [
   { icon: GitBranch, label: "Scaffolding repositories" },
   { icon: Sparkles, label: "Assigning to available engineers" },
   { icon: Cpu, label: "Analyzing project scope" },
+  { icon: BookOpen, label: "Generating architecture documents" },
   { icon: FileText, label: "Writing & prioritizing tickets" },
 ]
 
@@ -77,12 +79,15 @@ export function Launchpad({
           if (fullText.includes("STEP 2.5 - PRODUCT BLUEPRINT")) {
             setStep(2)
           } 
-          if (fullText.includes("STEP 3 - DERIVE ISSUES FROM BLUEPRINT")) {
+          if (fullText.includes("STEP 2.8 - WRITE ARCHITECTURE DOCUMENT")) {
             setStep(3)
+          } 
+          if (fullText.includes("STEP 3 - DERIVE ISSUES FROM BLUEPRINT")) {
+            setStep(4)
           } 
           if (fullText.includes("__FINAL_JSON__")) {
             reachedEnd = true
-            setStep(4)
+            setStep(5)
           }
         }
       }

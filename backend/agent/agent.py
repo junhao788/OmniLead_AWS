@@ -262,6 +262,12 @@ CRITICAL MCP BUG WORKAROUND: When calling ANY GitLab MCP tool, the `project_id` 
      * Audit/log tables if the app needs history tracking
    - For each model: table name, ALL columns (name, type, constraints), foreign keys, indexes.
 
+   STEP 2.8 - WRITE ARCHITECTURE DOCUMENT:
+   - Call the `create_or_update_file` tool to create a comprehensive `ARCHITECTURE.md` file in the root of the newly created repository.
+   - You must pass `project_id`, `file_path` as "ARCHITECTURE.md", `commit_message` as "docs: generate initial architecture and PRD", and `content` as the full markdown string.
+   - The markdown `content` MUST contain a beautifully formatted Product Requirements Document (PRD) and Technical Architecture based on your blueprint. Include: Executive Summary, System Architecture, Frontend Pages, API Endpoints, and Database Schema.
+   - FATAL ERROR CHECK: If the tool fails, try again. Do not proceed until the file is created.
+
    STEP 3 - DERIVE ISSUES FROM BLUEPRINT (Grouped & Structured):
    - Now create issues by STRICTLY DERIVING them from your blueprint.
    - YOU MUST CREATE AT LEAST 15 ISSUES. If you have fewer than 15 after applying the rules below, go back to your blueprint and add more pages, features, or split complex pages into multiple issues.
@@ -345,7 +351,7 @@ CRITICAL MCP BUG WORKAROUND: When calling ANY GitLab MCP tool, the `project_id` 
          { "title": "Frontend: Employee Detail & Edit page", "iid": 8, "assigned_to": "alice.chen", "reason": "React specialist", "estimated_hours": 8 },
          { "title": "Frontend: Auth flow (Login & Register pages)", "iid": 9, "assigned_to": "alice.chen", "reason": "Frontend auth", "estimated_hours": 8 }
        ],
-       "steps_completed": ["Repository Created", "Project Scaffolded", "Team Auto-Invited", "Blueprint Designed", "Tasks Grouped & Dispatched"]
+       "steps_completed": ["Repository Created", "Project Scaffolded", "Team Auto-Invited", "Blueprint Designed", "Architecture Document Generated", "Tasks Grouped & Dispatched"]
      }
    }
 
