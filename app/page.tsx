@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Search, Bell } from "lucide-react"
 import { Sidebar, type ViewKey } from "@/components/sidebar"
+import { Dashboard } from "@/components/dashboard"
 import { Launchpad } from "@/components/launchpad"
 import { Roster } from "@/components/roster"
 import { SprintPlanner } from "@/components/sprint-planner"
@@ -10,6 +11,7 @@ import { DailyStandup } from "@/components/daily-standup"
 import { fetchAPI } from "@/lib/api"
 
 const titles: Record<ViewKey, { title: string; subtitle: string }> = {
+  dashboard: { title: "Dashboard", subtitle: "Project health and agent command center." },
   launchpad: { title: "Launchpad", subtitle: "Turn a raw idea into a scaffolded project." },
   roster: { title: "Company Roster", subtitle: "Your engineering team and live workload." },
   sprint: { title: "Sprint Planner", subtitle: "Backlog automatically prioritized by OmniLead." },
@@ -17,7 +19,7 @@ const titles: Record<ViewKey, { title: string; subtitle: string }> = {
 }
 
 export default function Page() {
-  const [view, setView] = useState<ViewKey>("launchpad")
+  const [view, setView] = useState<ViewKey>("dashboard")
   const [projectId, setProjectId] = useState<string>("")
   const [projects, setProjects] = useState<any[]>([])
   const [loadingProjects, setLoadingProjects] = useState(true)
@@ -36,6 +38,9 @@ export default function Page() {
           } else if (data.projects.length > 0) {
             setProjectId(data.projects[0].id)
             localStorage.setItem("omnilead_selected_project_id", data.projects[0].id)
+          } else if (data.projects.length === 0) {
+            // If no projects, force launchpad
+            setView("launchpad")
           }
         }
       })
@@ -59,7 +64,7 @@ export default function Page() {
     setProjects((prev) => [formatted, ...prev])
     setProjectId(newProject.id)
     localStorage.setItem("omnilead_selected_project_id", newProject.id)
-    setView("sprint")
+    setView("dashboard")
   }
 
   return (
@@ -97,6 +102,7 @@ export default function Page() {
         </header>
 
         <div className="flex-1 overflow-y-auto p-5 lg:p-8">
+          {view === "dashboard" && <Dashboard projectId={projectId} />}
           {view === "launchpad" && <Launchpad onProjectCreated={handleProjectCreated} />}
           {view === "roster" && <Roster />}
           {view === "sprint" && <SprintPlanner projectId={projectId} />}
