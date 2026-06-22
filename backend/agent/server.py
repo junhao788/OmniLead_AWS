@@ -106,6 +106,8 @@ async def get_sprint_history(project_id: str):
                             {"column_name": "Done", "cards": []}
                         ]
                     }
+                    sprints = [new_sprint]
+                    db_save_sprints(project_id, sprints)
                 else:
                     # No issues on GitLab, return an empty board
                     new_sprint = {
