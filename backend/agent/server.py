@@ -405,6 +405,7 @@ def _prepare_agent_env():
 
     merged_env = os.environ.copy()
     merged_env["PYTHONIOENCODING"] = "utf-8"
+    merged_env["PYTHONUNBUFFERED"] = "1"
     merged_env["NODE_OPTIONS"] = "--max-old-space-size=40"
     merged_env["MALLOC_ARENA_MAX"] = "1"
     merged_env["PYTHONMALLOC"] = "malloc"
@@ -547,7 +548,7 @@ async def chat(request: ChatRequest):
                             yield line_str
                         except asyncio.TimeoutError:
                             # Keep connection alive for Render's 100s proxy timeout
-                            yield " "
+                            yield " \n"
                             if process.returncode is not None:
                                 break
                             continue
@@ -600,9 +601,9 @@ async def chat(request: ChatRequest):
                             
                         line_str = line_bytes.decode('utf-8', errors='replace')
                         full_output += line_str
-                        yield " "
+                        yield " \n"
                     except asyncio.TimeoutError:
-                        yield " "
+                        yield " \n"
                         if process.returncode is not None:
                             break
                         continue
