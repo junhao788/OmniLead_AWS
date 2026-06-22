@@ -1399,6 +1399,24 @@ async def publish_release(project_id: str, request: ReleasePublishRequest):
     return result
 
 # ── GitHub Auto-Skill Detection ───────────────────────────────────────
+@app.get("/api/projects/{project_id}/file/{file_path:path}")
+async def get_project_file(project_id: str, file_path: str):
+    """Fetches raw file content from the project's repository."""
+    import requests
+    import urllib.parse
+    from agent.gitlab_api import GITLAB_API_URL, HEADERS
+    
+    encoded_path = urllib.parse.quote(file_path, safe='')
+    url = f"{GITLAB_API_URL}/projects/{project_id}/repository/files/{encoded_path}/raw?ref=main"
+    
+    resp = requests.get(url, headers=HEADERS)
+    if resp.status_code == 404:
+        raise HTTPException(status_code=404, detail="File not found")
+    if resp.status_code != 200:
+        raise HTTPException(status_code=resp.status_code, detail="Failed to fetch file")
+        
+    return {"content": resp.text}
+
 @app.get("/api/github/{username}/skills")
 async def get_github_skills(username: str):
     import collections

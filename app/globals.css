@@ -95,3 +95,35 @@
     @apply font-sans;
   }
 }
+
+@media print {
+  /* Hide the sidebar and any buttons with 'no-print' class */
+  aside, .no-print {
+    display: none !important;
+  }
+  /* Remove dark mode background for printing */
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+  /* Make sure the content expands to fill the page */
+  main, .scrollable-print {
+    height: auto !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: white !important;
+  }
+  /* Improve typography for printing */
+  .prose {
+    max-width: 100% !important;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  pre, blockquote, img, table {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}

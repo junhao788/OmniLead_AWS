@@ -8,11 +8,13 @@ import { Launchpad } from "@/components/launchpad"
 import { Roster } from "@/components/roster"
 import { SprintPlanner } from "@/components/sprint-planner"
 import { DailyStandup } from "@/components/daily-standup"
+import { ArchitectureReport } from "@/components/architecture-report"
 import { fetchAPI } from "@/lib/api"
 
 const titles: Record<ViewKey, { title: string; subtitle: string }> = {
   dashboard: { title: "Dashboard", subtitle: "Project health and agent command center." },
   launchpad: { title: "Launchpad", subtitle: "Turn a raw idea into a scaffolded project." },
+  architecture: { title: "Architecture PRD", subtitle: "Zero-to-one product blueprint and technical specs." },
   roster: { title: "Company Roster", subtitle: "Your engineering team and live workload." },
   sprint: { title: "Sprint Planner", subtitle: "Backlog automatically prioritized by OmniLead." },
   standup: { title: "Daily Standup", subtitle: "AI-generated summary of what shipped today." },
@@ -64,7 +66,7 @@ export default function Page() {
     setProjects((prev) => [formatted, ...prev])
     setProjectId(newProject.id)
     localStorage.setItem("omnilead_selected_project_id", newProject.id)
-    setView("dashboard")
+    setView("architecture")
   }
 
   return (
@@ -79,7 +81,7 @@ export default function Page() {
       />
 
       <main className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-4 border-b border-border bg-background/80 px-5 py-4 backdrop-blur lg:px-8">
+        <header className="flex items-center gap-4 border-b border-border bg-background/80 px-5 py-4 backdrop-blur lg:px-8 no-print">
           <div className="min-w-0">
             <h1 className="truncate text-lg font-semibold tracking-tight text-foreground">{meta.title}</h1>
             <p className="truncate text-sm text-muted-foreground">{meta.subtitle}</p>
@@ -101,9 +103,10 @@ export default function Page() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-5 lg:p-8">
+        <div className="flex-1 overflow-y-auto p-5 lg:p-8 scrollable-print">
           {view === "dashboard" && <Dashboard projectId={projectId} />}
           {view === "launchpad" && <Launchpad onProjectCreated={handleProjectCreated} />}
+          {view === "architecture" && <ArchitectureReport projectId={projectId} />}
           {view === "roster" && <Roster />}
           {view === "sprint" && <SprintPlanner projectId={projectId} />}
           {view === "standup" && <DailyStandup projectId={projectId} />}
