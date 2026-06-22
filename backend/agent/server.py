@@ -539,7 +539,7 @@ async def chat(request: ChatRequest):
                     full_output = ""
                     while True:
                         try:
-                            line_bytes = await asyncio.wait_for(process.stdout.readline(), timeout=5.0)
+                            line_bytes = await asyncio.wait_for(process.stdout.read(4096), timeout=5.0)
                             if not line_bytes:
                                 break
                                 
@@ -552,6 +552,10 @@ async def chat(request: ChatRequest):
                             if process.returncode is not None:
                                 break
                             continue
+                        except Exception as e:
+                            print(f"Exception in stream_agent_output read: {str(e)}", flush=True)
+                            yield f"\n[SERVER ERROR] {str(e)}\n"
+                            break
 
                     try:
                         await asyncio.wait_for(process.wait(), timeout=2.0)
@@ -559,7 +563,7 @@ async def chat(request: ChatRequest):
                         pass
 
                     # Extract final JSON robustly
-                    print(f"--- AGENT SUBPROCESS OUTPUT ---\n{full_output}\n--- END SUBPROCESS OUTPUT ---", flush=True)
+                    print(f"--- AGENT PROCESS FINISHED ---", flush=True)
                     yield "\n__FINAL_JSON__\n"
                     if process.returncode is not None and process.returncode != 0:
                         import json
@@ -597,7 +601,7 @@ async def chat(request: ChatRequest):
                 full_output = ""
                 while True:
                     try:
-                        line_bytes = await asyncio.wait_for(process.stdout.readline(), timeout=2.0)
+                        line_bytes = await asyncio.wait_for(process.stdout.read(4096), timeout=2.0)
                         
                         if not line_bytes:
                             break
@@ -610,6 +614,10 @@ async def chat(request: ChatRequest):
                         if process.returncode is not None:
                             break
                         continue
+                    except Exception as e:
+                        print(f"Exception in stream_spaces_then_json read: {str(e)}", flush=True)
+                        yield f"\n[SERVER ERROR] {str(e)}\n"
+                        break
 
                 # Process finished. Extract final JSON robustly
                 cleaned_json = clean_and_serialize_json(full_output)
