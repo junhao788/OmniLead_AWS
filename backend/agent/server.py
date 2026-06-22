@@ -553,17 +553,20 @@ async def chat(request: ChatRequest):
                                 break
                             continue
 
-                    await process.wait()
+                    try:
+                        await asyncio.wait_for(process.wait(), timeout=2.0)
+                    except asyncio.TimeoutError:
+                        pass
 
                     # Extract final JSON robustly
                     print(f"--- AGENT SUBPROCESS OUTPUT ---\n{full_output}\n--- END SUBPROCESS OUTPUT ---", flush=True)
                     yield "\n__FINAL_JSON__\n"
-                    if process.returncode != 0:
+                    if process.returncode is not None and process.returncode != 0:
                         import json
                         yield json.dumps({"error": f"Agent crashed with code {process.returncode}"})
                     else:
-                        import json
-                        yield json.dumps({"status": "success"})
+                        cleaned_json = clean_and_serialize_json(full_output)
+                        yield cleaned_json
                 finally:
                     _agent_busy = False
 
