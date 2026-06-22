@@ -108,7 +108,7 @@ export function Dashboard({ projectId }: { projectId: string }) {
     : "stroke-muted/20"
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-6 animate-in fade-in duration-500 h-full">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-6 animate-in fade-in duration-500">
       {/* Top Left: Main Metrics & Breakdown */}
       <div className="bg-card border border-border rounded-2xl p-6 relative flex flex-col min-h-[340px] shadow-sm">
         <div className="flex items-start justify-between mb-6">
