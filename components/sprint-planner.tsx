@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Sparkles, ArrowUpDown, Info, Loader2 } from "lucide-react"
-import { tickets as mockTickets, developers, type Ticket, type Priority, type TicketStatus } from "@/lib/data"
+import { type Ticket, type Priority, type TicketStatus } from "@/lib/data"
 import { Badge } from "@/components/badge"
 import { cn } from "@/lib/utils"
 import { fetchAPI } from "@/lib/api"
@@ -22,13 +22,15 @@ const statusConfig: Record<TicketStatus, { label: string; className: string }> =
   done: { label: "Done", className: "text-primary" },
 }
 
-function devById(id: string | null) {
-  return developers.find((d) => d.id === id) ?? null
+function getInitials(username: string): string {
+  // "alice.chen" → "AC", "bob" → "BO"
+  const parts = username.split(/[._-]/)
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return username.slice(0, 2).toUpperCase()
 }
 
 function TicketRow({ ticket }: { ticket: Ticket }) {
   const [open, setOpen] = useState(false)
-  const assignee = devById(ticket.assignee)
   const priority = priorityConfig[ticket.priority]
   const status = statusConfig[ticket.status]
 
@@ -67,12 +69,12 @@ function TicketRow({ ticket }: { ticket: Ticket }) {
         <span className={cn("hidden text-xs font-medium sm:inline-flex", status.className)}>{status.label}</span>
 
         <div className="flex items-center justify-end gap-2">
-          {assignee ? (
+          {ticket.assignee ? (
             <span
               className="flex size-7 items-center justify-center rounded-full bg-secondary text-[10px] font-semibold text-secondary-foreground"
-              title={assignee.name}
+              title={ticket.assignee}
             >
-              {assignee.initials}
+              {getInitials(ticket.assignee)}
             </span>
           ) : (
             <span className="text-xs text-muted-foreground">Unassigned</span>
@@ -117,18 +119,39 @@ export function SprintPlanner({ projectId }: { projectId?: string }) {
             if (col.column_name.toLowerCase().includes("progress")) status = "in-progress"
             else if (col.column_name.toLowerCase().includes("review")) status = "in-review"
             else if (col.column_name.toLowerCase().includes("done")) status = "done"
+            else if (col.column_name.toLowerCase().includes("backlog")) status = "backlog"
 
             col.cards.forEach((card: any) => {
+              // Derive priority from labels or position
+              let priority: Priority = "medium"
+              const labels = (card.labels || []).map((l: string) => l.toLowerCase())
+              if (labels.some((l: string) => l.includes("critical") || l.includes("urgent"))) priority = "critical"
+              else if (labels.some((l: string) => l.includes("high"))) priority = "high"
+              else if (labels.some((l: string) => l.includes("low"))) priority = "low"
+              else if (rank <= 3) priority = "high"
+              else if (rank >= 10) priority = "low"
+
+              // Derive tags from title keywords
+              const title = (card.title || "").toLowerCase()
+              const tags: string[] = []
+              if (title.includes("frontend") || title.includes("ui") || title.includes("page") || title.includes("component")) tags.push("frontend")
+              if (title.includes("backend") || title.includes("api") || title.includes("endpoint") || title.includes("server")) tags.push("backend")
+              if (title.includes("database") || title.includes("model") || title.includes("schema") || title.includes("migration")) tags.push("database")
+              if (title.includes("auth") || title.includes("login") || title.includes("permission")) tags.push("auth")
+              if (title.includes("deploy") || title.includes("ci") || title.includes("docker") || title.includes("infra")) tags.push("infra")
+              if (title.includes("test") || title.includes("spec")) tags.push("testing")
+              if (tags.length === 0) tags.push("feature")
+
               newTickets.push({
-                id: `OL-${Math.floor(Math.random() * 900) + 100}`,
+                id: card.issue_iid ? `#${card.issue_iid}` : `OL-${rank}`,
                 title: card.title,
                 status,
-                priority: "high", // Defaulting as API might not provide it
+                priority,
                 assignee: card.assignee || null,
-                points: Math.floor(Math.random() * 5) + 1,
-                tags: ["backend"],
+                points: card.estimated_hours ? Math.ceil(card.estimated_hours / 2) : (rank <= 5 ? 5 : 3),
+                tags,
                 aiRank: rank++,
-                rationale: "AI scheduled this task for the current sprint based on dependencies.",
+                rationale: card.reason || card.rationale || "AI scheduled this task for the current sprint based on dependencies and priority.",
               })
             })
           })

@@ -267,11 +267,18 @@ export function Launchpad({
                 className="w-full font-medium" 
                 onClick={async () => {
                   if (onProjectCreated) {
+                    // Prefer the project_id from the agent's response (canonical source)
+                    if (launchResult?.project_id) {
+                      onProjectCreated({ 
+                        id: String(launchResult.project_id), 
+                        name: launchResult?.repo_name || "New Project" 
+                      })
+                      return
+                    }
+                    // Fallback: fetch from API if agent didn't return project_id
                     try {
-                      // Fetch the real project ID that was just created on GitLab
                       const data = await fetchAPI("/api/projects")
                       if (data.projects && data.projects.length > 0) {
-                        // Assuming the first one is the newest or the one they want
                         const latest = data.projects[0]
                         onProjectCreated({ id: String(latest.id), name: latest.name })
                         return
@@ -279,9 +286,9 @@ export function Launchpad({
                     } catch (err) {
                       console.error("Failed to fetch latest project ID", err)
                     }
-                    // Fallback if fetch fails
+                    // Final fallback
                     onProjectCreated({ 
-                      id: launchResult?.project_id ? String(launchResult.project_id) : `new-project-${Date.now()}`, 
+                      id: `new-project-${Date.now()}`, 
                       name: launchResult?.repo_name || "New Project" 
                     })
                   }
