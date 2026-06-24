@@ -81,19 +81,34 @@ class SprintSaveRequest(BaseModel):
 @app.get("/api/sprints/{project_id}")
 async def get_sprint_history(project_id: str):
     try:
-        sprints = db_get_sprints(project_id)
+        sprints = []
+        try:
+            sprints = db_get_sprints(project_id)
+        except Exception as db_err:
+            print(f"[Sprint] DynamoDB read failed for {project_id}: {db_err}", flush=True)
+            sprints = []
+
         if not sprints:
             # Auto-generate a sprint from GitLab issues
             from agent.gitlab_api import list_project_issues
             try:
-                issues = list_project_issues(project_id, state="opened").get("issues", [])
+                result = list_project_issues(project_id, state="opened", per_page=100)
+                issues = result.get("issues", [])
+                print(f"[Sprint] Auto-generating for project {project_id}: found {len(issues)} open issues", flush=True)
                 if issues:
                     board_cards = []
                     for iss in issues:
+                        # assignees is a flat list of username strings (e.g. ["alice.chen"])
+                        assignees_list = iss.get("assignees", [])
+                        assignee = assignees_list[0] if assignees_list else None
+                        # If assignee is a dict (defensive), extract username
+                        if isinstance(assignee, dict):
+                            assignee = assignee.get("username")
                         board_cards.append({
                             "title": iss.get("title"),
-                            "assignee": iss.get("assignees", [{}])[0].get("username") if iss.get("assignees") else None,
+                            "assignee": assignee,
                             "issue_iid": iss.get("iid"),
+                            "labels": iss.get("labels", []),
                             "status": "todo"
                         })
                     new_sprint = {
@@ -107,7 +122,10 @@ async def get_sprint_history(project_id: str):
                         ]
                     }
                     sprints = [new_sprint]
-                    db_save_sprints(project_id, sprints)
+                    try:
+                        db_save_sprints(project_id, sprints)
+                    except Exception as save_err:
+                        print(f"[Sprint] DynamoDB save failed: {save_err}", flush=True)
                 else:
                     # No issues on GitLab, return an empty board
                     new_sprint = {
@@ -121,9 +139,9 @@ async def get_sprint_history(project_id: str):
                         ]
                     }
                     sprints = [new_sprint]
-                    db_save_sprints(project_id, sprints)
             except Exception as e:
-                print(f"Auto-sync issues failed: {e}")
+                import traceback
+                print(f"[Sprint] Auto-sync issues failed: {e}\n{traceback.format_exc()}", flush=True)
                 # FALLBACK: If anything fails (e.g. network error to GitLab), return empty board
                 new_sprint = {
                     "sprint_id": f"sprint-auto",
@@ -139,6 +157,7 @@ async def get_sprint_history(project_id: str):
         return {"sprints": sprints}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/api/sprints/{project_id}")
 async def save_sprint_history(project_id: str, request: SprintSaveRequest):
