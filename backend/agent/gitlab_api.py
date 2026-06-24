@@ -1160,3 +1160,36 @@ def get_latest_commit(project_id: str, branch: str = "main") -> dict:
     if resp.status_code == 200 and len(resp.json()) > 0:
         return resp.json()[0]
     return {}
+
+def create_or_update_file(project_id: str, file_path: str, content: str, commit_message: str = "Update file", branch: str = "main") -> dict:
+    """Create or update a file in the GitLab repository.
+    
+    Args:
+        project_id: The ID of the GitLab project.
+        file_path: The full path to the file (e.g. 'ARCHITECTURE.md' or 'src/main.py').
+        content: The text content of the file.
+        commit_message: The commit message describing the change.
+        branch: The branch to commit to.
+    """
+    import requests
+    encoded_path = requests.utils.quote(file_path, safe="")
+    url = f"{GITLAB_API_URL}/projects/{project_id}/repository/files/{encoded_path}"
+    
+    # Check if exists
+    resp = requests.get(url, headers=HEADERS, params={"ref": branch})
+    action = "update" if resp.status_code == 200 else "create"
+    
+    commit_url = f"{GITLAB_API_URL}/projects/{project_id}/repository/commits"
+    payload = {
+        "branch": branch,
+        "commit_message": commit_message,
+        "actions": [{
+            "action": action,
+            "file_path": file_path,
+            "content": content
+        }]
+    }
+    commit_resp = requests.post(commit_url, headers=HEADERS, json=payload)
+    if commit_resp.status_code in [200, 201]:
+        return {"status": "success", "action": action, "file_path": file_path}
+    return {"error": f"Failed to {action} file: {commit_resp.status_code} - {commit_resp.text[:300]}"}

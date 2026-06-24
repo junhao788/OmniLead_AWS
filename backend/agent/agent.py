@@ -27,6 +27,10 @@ from .gitlab_api import (
     get_company_directory,
     scaffold_project,
     create_repository,
+    create_or_update_file,
+    create_issue,
+    create_merge_request,
+    create_branch,
 )
 
 # 1. Configure GitLab MCP connection (provides write tools: create_issue, create_mr, etc.)
@@ -525,6 +529,11 @@ Respond concisely and professionally with cyberpunk phrasing (e.g. "PROTOCOL EXE
         batch_create_and_assign_issues,
         scaffold_project,
         create_repository,
+        # Native write fallbacks
+        create_or_update_file,
+        create_issue,
+        create_merge_request,
+        create_branch,
     ]
 )
 
