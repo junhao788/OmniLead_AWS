@@ -269,7 +269,11 @@ CRITICAL MCP BUG WORKAROUND: When calling ANY GitLab MCP tool, the `project_id` 
    STEP 2.8 - WRITE ARCHITECTURE DOCUMENT:
    - Call the `create_or_update_file` tool to create a comprehensive `ARCHITECTURE.md` file in the root of the newly created repository.
    - You must pass `project_id`, `file_path` as "ARCHITECTURE.md", `commit_message` as "docs: generate initial architecture and PRD", and `content` as the full markdown string.
-   - The markdown `content` MUST contain a beautifully formatted Product Requirements Document (PRD) and Technical Architecture based on your blueprint. Include: Executive Summary, System Architecture, Frontend Pages, API Endpoints, and Database Schema.
+   - The markdown `content` MUST be beautifully formatted for human readability:
+     1. Use proper Markdown formatting: H1/H2/H3 headings, bold text, and bullet points.
+     2. CRITICAL: Use DOUBLE NEWLINES (`\n\n`) to separate paragraphs so the text doesn't collapse into a giant wall of text.
+     3. Include at least TWO `mermaid` code blocks to visually explain the architecture (e.g., a Flowchart for System Architecture, and an ER Diagram for the Database Schema).
+     4. Sections must include: Executive Summary, System Architecture (with Mermaid flowchart), Frontend Pages, API Endpoints, and Database Schema (with Mermaid ERD).
    - FATAL ERROR CHECK: If the tool fails, try again. Do not proceed until the file is created.
 
    STEP 3 - DERIVE ISSUES FROM BLUEPRINT (Grouped & Structured):

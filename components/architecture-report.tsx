@@ -3,7 +3,39 @@
 import { useState, useEffect } from "react"
 import { BookOpen, FileDown, Loader2, RefreshCw } from "lucide-react"
 import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
+import remarkBreaks from "remark-breaks"
+import mermaid from "mermaid"
 import { API_BASE_URL } from "@/lib/api"
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  securityLevel: 'loose',
+})
+
+const MermaidChart = ({ code }: { code: string }) => {
+  const [svg, setSvg] = useState<string>('')
+  
+  useEffect(() => {
+    let isMounted = true;
+    const renderChart = async () => {
+      try {
+        const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
+        const { svg } = await mermaid.render(id, code)
+        if (isMounted) setSvg(svg)
+      } catch (err) {
+        console.error("Mermaid error", err)
+      }
+    }
+    renderChart()
+    return () => { isMounted = false; }
+  }, [code])
+
+  if (!svg) return <div className="p-4 flex items-center justify-center animate-pulse bg-muted/50 rounded-lg">Rendering diagram...</div>
+
+  return <div className="my-6 flex justify-center bg-card p-4 rounded-xl border border-border overflow-x-auto" dangerouslySetInnerHTML={{ __html: svg }} />
+}
 
 export function ArchitectureReport({ projectId }: { projectId: string }) {
   const [content, setContent] = useState<string | null>(null)
@@ -93,7 +125,21 @@ export function ArchitectureReport({ projectId }: { projectId: string }) {
         ) : content ? (
           <div className="p-8 md:p-12">
             <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none print:prose-black print:text-black">
-              <ReactMarkdown>{content}</ReactMarkdown>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkBreaks]}
+                components={{
+                  code(props) {
+                    const {children, className, node, ...rest} = props
+                    const match = /language-(\w+)/.exec(className || '')
+                    if (match && match[1] === 'mermaid') {
+                      return <MermaidChart code={String(children).replace(/\n$/, '')} />
+                    }
+                    return <code {...rest} className={className}>{children}</code>
+                  }
+                }}
+              >
+                {content}
+              </ReactMarkdown>
             </div>
           </div>
         ) : (
