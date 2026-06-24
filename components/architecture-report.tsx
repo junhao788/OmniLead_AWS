@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { BookOpen, FileDown, Loader2, RefreshCw } from "lucide-react"
 import ReactMarkdown from "react-markdown"
+import { API_BASE_URL } from "@/lib/api"
 
 export function ArchitectureReport({ projectId }: { projectId: string }) {
   const [content, setContent] = useState<string | null>(null)
@@ -14,7 +15,7 @@ export function ArchitectureReport({ projectId }: { projectId: string }) {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/projects/${projectId}/file/ARCHITECTURE.md`)
+      const res = await fetch(`${API_BASE_URL}/api/projects/${projectId}/file/ARCHITECTURE.md`)
       if (!res.ok) {
         if (res.status === 404) {
           throw new Error("ARCHITECTURE.md not found. Ensure the project was scaffolded with OmniLead.")
