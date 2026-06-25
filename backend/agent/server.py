@@ -57,6 +57,15 @@ async def get_projects():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/audit-log/{project_id}")
+async def fetch_audit_logs(project_id: str):
+    try:
+        from agent.db import get_audit_logs
+        logs = get_audit_logs(project_id)
+        return {"logs": logs}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/dashboard/{project_id}")
 async def fetch_dashboard_metrics(project_id: str):
     try:
@@ -124,6 +133,9 @@ async def get_sprint_history(project_id: str):
                     sprints = [new_sprint]
                     try:
                         db_save_sprints(project_id, sprints)
+                        # LOG ACTION
+                        from agent.db import save_audit_log
+                        save_audit_log(project_id, "SPRINT_GENERATED", "Generated Sprint Planner", f"AI prioritized backlog and estimated effort for team.", {})
                     except Exception as save_err:
                         print(f"[Sprint] DynamoDB save failed: {save_err}", flush=True)
                 else:
@@ -880,6 +892,20 @@ def execute_manual_review(project_id: str, mr_iid: int):
 
     proj_reviews.insert(0, new_review)
     db_save_reviews(project_id, proj_reviews)
+    
+    # LOG ACTION
+    from agent.db import save_audit_log
+    status = review_json.get("review", {}).get("status", "UNKNOWN")
+    auto_fixed = review_json.get("review", {}).get("auto_fixed", False)
+    
+    if auto_fixed:
+        action_name = "AUTO_REMEDIATED"
+        title_text = f"Auto-Remediated MR #{mr_iid}"
+    else:
+        action_name = f"MR_{status}"
+        title_text = f"Reviewed MR #{mr_iid}: {status}"
+        
+    save_audit_log(project_id, action_name, title_text, f"AI Tech Lead reviewed Merge Request: {mr_data.get('title')}", {"mr_iid": mr_iid, "status": status, "auto_fixed": auto_fixed})
 
     return new_review
 
@@ -1000,6 +1026,9 @@ async def execute_auto_triage(project_id: str, issue_iid: int, issue_data: dict)
         post_res = post_issue_comment(project_id, issue_iid, comment_body)
         if post_res.get("status") == "success":
             print(f"   ✅ Successfully posted triage comment on issue #{issue_iid}")
+            # LOG ACTION
+            from agent.db import save_audit_log
+            save_audit_log(project_id, "AUTO_TRIAGE", f"Auto-Assigned Issue #{issue_iid}", f"AI evaluated workloads and assigned to @{assignee_username}.", {"issue_iid": issue_iid, "assignee": assignee_username})
             
     except Exception as e:
         print(f"   ❌ Auto-Triage failed: {str(e)}")
@@ -1712,6 +1741,10 @@ async def generate_standup(project_id: str):
             history.append(new_standup)
             
         db_save_standups({"history": history})
+        
+        # LOG ACTION
+        from agent.db import save_audit_log
+        save_audit_log(project_id, "STANDUP_GENERATED", "Generated Daily Standup", f"AI generated daily activity report for team.", {"date": today})
         
         return {"status": "success", "standup": new_standup}
     except Exception as e:

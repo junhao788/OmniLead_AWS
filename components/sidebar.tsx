@@ -14,12 +14,13 @@ import {
   Plus,
   Search,
   BookOpen,
+  Activity,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/badge"
 import { LayoutGrid } from "lucide-react"
 
-export type ViewKey = "dashboard" | "launchpad" | "roster" | "sprint" | "standup" | "architecture"
+export type ViewKey = "dashboard" | "launchpad" | "roster" | "sprint" | "standup" | "architecture" | "audit"
 
 const items: { key: ViewKey; label: string; icon: React.ElementType; hint: string }[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutGrid, hint: "Command Center" },
@@ -28,6 +29,7 @@ const items: { key: ViewKey; label: string; icon: React.ElementType; hint: strin
   { key: "roster", label: "Company Roster", icon: Users, hint: "Team & workload" },
   { key: "sprint", label: "Sprint Planner", icon: ListChecks, hint: "AI backlog" },
   { key: "standup", label: "Daily Standup", icon: Sun, hint: "Reports" },
+  { key: "audit", label: "Agent Log", icon: Activity, hint: "Activity Timeline" },
 ]
 
 export function Sidebar({

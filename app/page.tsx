@@ -9,6 +9,7 @@ import { Roster } from "@/components/roster"
 import { SprintPlanner } from "@/components/sprint-planner"
 import { DailyStandup } from "@/components/daily-standup"
 import { ArchitectureReport } from "@/components/architecture-report"
+import { AuditLog } from "@/components/audit-log"
 import { fetchAPI } from "@/lib/api"
 
 const titles: Record<ViewKey, { title: string; subtitle: string }> = {
@@ -18,6 +19,7 @@ const titles: Record<ViewKey, { title: string; subtitle: string }> = {
   roster: { title: "Company Roster", subtitle: "Your engineering team and live workload." },
   sprint: { title: "Sprint Planner", subtitle: "Backlog automatically prioritized by OmniLead." },
   standup: { title: "Daily Standup", subtitle: "AI-generated summary of what shipped today." },
+  audit: { title: "Agent Activity Log", subtitle: "Timeline of all autonomous actions taken by OmniLead." },
 }
 
 export default function Page() {
@@ -110,6 +112,7 @@ export default function Page() {
           {view === "roster" && <Roster />}
           {view === "sprint" && <SprintPlanner projectId={projectId} />}
           {view === "standup" && <DailyStandup projectId={projectId} />}
+          {view === "audit" && <AuditLog projectId={projectId} />}
         </div>
       </main>
     </div>

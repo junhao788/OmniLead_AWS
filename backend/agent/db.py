@@ -136,3 +136,23 @@ def load_mock_registry():
 def save_mock_registry(registry):
     for username, roles in registry.items():
         db.put_item('REGISTRY', f'USER#{username}', {"username": username, "roles": roles})
+
+def save_audit_log(project_id, action, title, description, metadata=None):
+    import time
+    timestamp = time.time()
+    log_entry = {
+        "project_id": project_id,
+        "timestamp": timestamp,
+        "action": action,
+        "title": title,
+        "description": description,
+        "metadata": metadata or {}
+    }
+    # SK includes timestamp to ensure uniqueness and chronological sorting
+    sk = f'LOG#{timestamp}'
+    db.put_item(f'AUDIT#{project_id}', sk, log_entry)
+
+def get_audit_logs(project_id):
+    items = db.query_by_pk(f'AUDIT#{project_id}')
+    # Sort descending by timestamp
+    return sorted(items, key=lambda x: x.get("timestamp", 0), reverse=True)
