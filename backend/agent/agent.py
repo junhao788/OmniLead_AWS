@@ -47,7 +47,7 @@ gitlab_mcp_tools = McpToolset(connection_params=gitlab_params)
 # 2. Initialize the ADK Agent with BOTH MCP tools AND custom read tools
 root_agent = Agent(
     name="project_agent",
-    model="gemini-3.5-flash",
+    model="gemini-3.0-flash",
     instruction="""You are 'Project Agent', an elite AI project manager.
 
 You have TWO sets of tools:
@@ -585,7 +585,7 @@ def run_tech_lead_review(project_id: str, mr_data: dict, changes_data: dict) -> 
         prompt += f"File: {change.get('new_path')}\nDiff:\n{change.get('diff')}\n---\n"
 
     api_key = os.environ.get("GOOGLE_API_KEY", "")
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.0-flash:generateContent?key={api_key}"
 
     payload = {
         "system_instruction": {
