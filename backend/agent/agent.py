@@ -272,8 +272,11 @@ CRITICAL MCP BUG WORKAROUND: When calling ANY GitLab MCP tool, the `project_id` 
    - The markdown `content` MUST be beautifully formatted for human readability:
      1. Use proper Markdown formatting: H1/H2/H3 headings, bold text, and bullet points.
      2. CRITICAL: Use DOUBLE NEWLINES (`\n\n`) to separate paragraphs so the text doesn't collapse into a giant wall of text.
-     3. Include at least TWO `mermaid` code blocks to visually explain the architecture (e.g., a Flowchart for System Architecture, and an ER Diagram for the Database Schema).
-     4. Sections must include: Executive Summary, System Architecture (with Mermaid flowchart), Frontend Pages, API Endpoints, and Database Schema (with Mermaid ERD).
+     3. CRITICAL: For API endpoints and Database schemas, you MUST use markdown bullet lists (`- `) and bold text (`**`). DO NOT just output lines of plain text. Example:
+        - **id** (UUID, Primary Key): The unique identifier.
+        - **name** (VARCHAR): The user's name.
+     4. Include at least TWO `mermaid` code blocks to visually explain the architecture (e.g., a Flowchart for System Architecture, and an ER Diagram for the Database Schema). ENSURE MERMAID SYNTAX IS 100% CORRECT.
+     5. Sections must include: Executive Summary, System Architecture (with Mermaid flowchart), Frontend Pages, API Endpoints, and Database Schema (with Mermaid ERD).
    - FATAL ERROR CHECK: If the tool fails, try again. Do not proceed until the file is created.
 
    STEP 3 - DERIVE ISSUES FROM BLUEPRINT (Grouped & Structured):
