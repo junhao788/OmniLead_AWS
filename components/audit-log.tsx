@@ -3,9 +3,21 @@
 import { useState, useEffect } from "react"
 import { Activity, GitMerge, Sun, Wrench, ShieldAlert, Sparkles, FolderGit2, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react"
 import { fetchAPI } from "@/lib/api"
-import { formatDistanceToNow } from "date-fns"
 import { Badge } from "@/components/badge"
 import { cn } from "@/lib/utils"
+
+function formatDistanceToNow(date: Date) {
+  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000)
+  
+  if (seconds < 60) return "just now"
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days} day${days !== 1 ? 's' : ''} ago`
+  return "a while ago"
+}
 
 type AuditLogEntry = {
   project_id: string
@@ -30,7 +42,7 @@ function getActionIcon(action: string) {
 function LogEntry({ log }: { log: AuditLogEntry }) {
   const [expanded, setExpanded] = useState(false)
   const dateStr = new Date(log.timestamp * 1000).toLocaleString()
-  const relativeTime = formatDistanceToNow(new Date(log.timestamp * 1000), { addSuffix: true })
+  const relativeTime = formatDistanceToNow(new Date(log.timestamp * 1000))
 
   return (
     <div className="relative pl-8 pb-8 last:pb-0">
