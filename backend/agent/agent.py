@@ -269,14 +269,45 @@ CRITICAL MCP BUG WORKAROUND: When calling ANY GitLab MCP tool, the `project_id` 
    STEP 2.8 - WRITE ARCHITECTURE DOCUMENT:
    - Call the `create_or_update_file` tool to create a comprehensive `ARCHITECTURE.md` file in the root of the newly created repository.
    - You must pass `project_id`, `file_path` as "ARCHITECTURE.md", `commit_message` as "docs: generate initial architecture and PRD", and `content` as the full markdown string.
-   - The markdown `content` MUST be beautifully formatted for human readability:
-     1. Use proper Markdown formatting: H1/H2/H3 headings, bold text, and bullet points.
-     2. CRITICAL: Use DOUBLE NEWLINES (`\n\n`) to separate paragraphs so the text doesn't collapse into a giant wall of text.
-     3. CRITICAL: For API endpoints and Database schemas, you MUST use markdown bullet lists (`- `) and bold text (`**`). DO NOT just output lines of plain text. Example:
-        - **id** (UUID, Primary Key): The unique identifier.
-        - **name** (VARCHAR): The user's name.
-     4. Include at least TWO `mermaid` code blocks to visually explain the architecture (e.g., a Flowchart for System Architecture, and an ER Diagram for the Database Schema). ENSURE MERMAID SYNTAX IS 100% CORRECT.
-     5. Sections must include: Executive Summary, System Architecture (with Mermaid flowchart), Frontend Pages, API Endpoints, and Database Schema (with Mermaid ERD).
+   - CRITICAL: You MUST use the exact markdown template structure below. Do not output plain text blocks. You must use `#` for headers and `-` for lists.
+   
+   TEMPLATE TO FOLLOW STRICTLY:
+   ```markdown
+   # Architecture Document & PRD
+
+   ## 1. Executive Summary
+   (Paragraphs describing the project...)
+
+   ## 2. System Architecture
+   (Paragraphs describing the stack...)
+
+   ### Architecture Flowchart
+   ```mermaid
+   flowchart TD
+      A[Frontend] --> B[API]
+   ```
+
+   ## 3. Database Schema
+   ### User Table
+   - **id** (UUID, PK): Unique identifier.
+   - **email** (VARCHAR): User email.
+
+   ### Product Table
+   - **id** (UUID, PK): Unique identifier.
+   - **name** (VARCHAR): Product name.
+
+   ### ER Diagram
+   ```mermaid
+   erDiagram
+      USER ||--o{ PRODUCT : creates
+   ```
+
+   ## 4. API Endpoints
+   ### Auth Service
+   - `POST /api/auth/login` - Authenticates user.
+   - `GET /api/auth/me` - Gets current user.
+   ```
+
    - FATAL ERROR CHECK: If the tool fails, try again. Do not proceed until the file is created.
 
    STEP 3 - DERIVE ISSUES FROM BLUEPRINT (Grouped & Structured):
