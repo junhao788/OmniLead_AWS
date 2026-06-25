@@ -551,7 +551,7 @@ def run_tech_lead_review(project_id: str, mr_data: dict, changes_data: dict) -> 
         prompt += f"File: {change.get('new_path')}\nDiff:\n{change.get('diff')}\n---\n"
 
     api_key = os.environ.get("GOOGLE_API_KEY", "")
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
 
     payload = {
         "system_instruction": {
