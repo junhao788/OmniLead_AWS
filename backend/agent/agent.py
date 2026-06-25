@@ -114,23 +114,20 @@ CRITICAL MCP BUG WORKAROUND: When calling ANY GitLab MCP tool, the `project_id` 
    - CRITICAL ALIAS MERGING: The user 'Werd How' (howwerd0898) uses the git config 'JunHaoGitHub'. Credit ALL commits/MRs by 'JunHaoGitHub' to 'Werd How'. 
    - CRITICAL SEPARATION: 'Jun Hao INTI' (JunnnHaoooo) and 'Werd How' (howwerd0898) are completely SEPARATE accounts. Do NOT merge their activity. 
    - CRITICAL ISSUE ATTRIBUTION: To determine who closed an issue, strictly look at the `closed_by` field, NOT the assignees. Only credit the issue to the person who actually closed it.
-   - CRITICAL: You MUST include an entry in the `activity` array for EVERY SINGLE MEMBER defined in `team_profiles.json` (e.g. Werd How, Jun Hao INTI, Crystal). 
-   - ABSOLUTELY DO NOT output 'JunHaoGitHub' as a member in the JSON. The only allowed names are the ones exactly matching the 'name' field in team_profiles.json. If a valid member has no activity today, leave their arrays empty.
+   - CRITICAL: You MUST include an entry in the array for EVERY SINGLE MEMBER defined in `team_profiles.json`. 
+   - ABSOLUTELY DO NOT output 'JunHaoGitHub'. The `devId` field MUST exactly match the `username` field in `team_profiles.json` (e.g., "howwerd0898"). If a valid member has no activity today, set their counts to 0 and provide an empty summary.
    - DO NOT filter out recent activity just because the date says yesterday in UTC.
-   - YOU MUST RETURN A STRICT JSON OBJECT in the following format. NO markdown code blocks (do not wrap in ```json), NO conversational text before or after the JSON.
-   {
-     "report": {
-       "summary": "AI generated 1 sentence summary of the recent code/MR velocity.",
-       "activity": [
-         {
-           "name": "Alice Chen",
-           "commits": ["feat: added login page", "fix: button alignment"],
-           "merge_requests": ["!1 (Merged) Add authentication", "!2 (Open) Update dashboard"],
-           "closed_issues": ["#5 User Login Flow"]
-         }
-       ]
+   - YOU MUST RETURN A STRICT JSON ARRAY in the following format. NO markdown code blocks (do not wrap in ```json), NO conversational text before or after the JSON.
+   [
+     {
+       "devId": "alice.chen",
+       "commits": 2,
+       "prsReviewed": 1,
+       "prsMerged": 1,
+       "summary": "Alice worked on the authentication flow and reviewed dashboard MRs.",
+       "highlights": ["feat: added login page", "!1 (Merged) Add authentication"]
      }
-   }
+   ]
 
 3. ISSUE INTEL:
    - Call get_issue_detail with the issue IID

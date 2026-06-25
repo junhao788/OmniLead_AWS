@@ -46,9 +46,27 @@ export function DailyStandup({ projectId }: { projectId?: string }) {
       })
   }, [projectId])
 
-  function generate() {
+  async function generate() {
+    if (!projectId) return
     setPhase("generating")
-    setTimeout(() => setPhase("ready"), 1800)
+    try {
+      const res = await fetchAPI(`/api/standups/${projectId}/generate`, { method: "POST" })
+      if (res.standup && res.standup.report) {
+        let parsed = res.standup.report
+        if (typeof parsed === "string") {
+          parsed = JSON.parse(parsed)
+        }
+        if (Array.isArray(parsed)) {
+          setEntries(parsed)
+          setPhase("ready")
+          return
+        }
+      }
+      throw new Error("Invalid response format")
+    } catch (e) {
+      console.error("Failed to generate standup:", e)
+      setPhase("idle")
+    }
   }
 
   const totals = entries.reduce(

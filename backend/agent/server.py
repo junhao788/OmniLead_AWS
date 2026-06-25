@@ -1654,3 +1654,65 @@ async def get_standup_history(project_id: str):
         return {"standups": standups_list}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/standups/{project_id}/generate")
+async def generate_standup(project_id: str):
+    """Trigger the AI Agent to generate the daily standup."""
+    try:
+        from agent.agent import root_agent
+        import json
+        import time
+        from datetime import datetime
+        
+        prompt = f"Project ID: {project_id}\nExecute PROTOCOL 2: STANDUP GENERATOR. Remember to read team_profiles.json for this project and include an entry for EVERY member."
+        print(f"[Standup] Triggering generation for project {project_id}")
+        
+        result = await asyncio.to_thread(root_agent.run, prompt)
+        
+        # Parse the JSON response
+        try:
+            # Clean up the output if the model wrapped it in markdown code blocks
+            output_text = result.output.strip()
+            if output_text.startswith("```json"):
+                output_text = output_text[7:]
+            if output_text.startswith("```"):
+                output_text = output_text[3:]
+            if output_text.endswith("```"):
+                output_text = output_text[:-3]
+                
+            parsed_report = json.loads(output_text.strip())
+        except Exception as parse_err:
+            print(f"[Standup] Parse error. Raw output: {result.output}")
+            raise HTTPException(status_code=500, detail=f"Failed to parse AI output: {str(parse_err)}")
+            
+        # Ensure it's stringified for DB storage (or stored natively depending on how DB handles it)
+        report_str = json.dumps(parsed_report) if isinstance(parsed_report, (list, dict)) else parsed_report
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        new_standup = {
+            "project_id": project_id,
+            "date": today,
+            "report": report_str,
+            "timestamp": time.time()
+        }
+        
+        # Save logic (similar to save_standup endpoint)
+        data = db_get_standups()
+        history = data.get("history", [])
+        
+        updated = False
+        for i, st in enumerate(history):
+            if st.get("project_id") == project_id and st.get("date") == today:
+                history[i] = new_standup
+                updated = True
+                break
+                
+        if not updated:
+            history.append(new_standup)
+            
+        db_save_standups({"history": history})
+        
+        return {"status": "success", "standup": new_standup}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
